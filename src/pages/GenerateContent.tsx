@@ -524,68 +524,96 @@ const GenerateContent = () => {
     return prompt;
   };
 
-  // Mock LLM function
+  // Smart InvokeLLM function that uses actual prompt data
   const InvokeLLM = async (prompt: string, responseJsonSchema?: any): Promise<any> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simulate API delay with randomness for uniqueness
+    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
     
     if (responseJsonSchema) {
-      // Return mock structured response for general content
-      return {
-        content_variations: [
-          {
-            text: "☕ Start your week right with our Monday Morning Special!\n\nGet 20% off your favorite latte when you visit us before 10 AM. Our freshly roasted beans and handcrafted drinks are the perfect way to fuel your week ahead.\n\n#MondayMotivation #CoffeeLovers #CozyCornerCafe",
-            image_prompts: [
-              "A steaming latte with beautiful latte art on a rustic wooden table, morning sunlight streaming through a cafe window",
-              "Close-up of coffee beans being poured into a vintage coffee roaster, warm lighting",
-              "Cozy cafe interior with customers enjoying morning coffee, soft natural lighting"
-            ],
-            video_ideas: [
-              "Time-lapse of a barista creating latte art",
-              "Behind-the-scenes of morning coffee preparation"
-            ],
-            further_suggestions: [
-              "Share customer testimonials about their favorite Monday drinks",
-              "Create a loyalty program for early morning customers"
-            ]
-          },
-          {
-            text: "🌟 New Week, New Flavors!\n\nIntroducing our limited-time Autumn Spice Latte - a perfect blend of cinnamon, nutmeg, and our signature espresso. Available only this month at Cozy Corner Cafe.\n\nTreat yourself to something special. You deserve it!\n\n#NewFlavor #AutumnVibes #SpecialtyDrinks",
-            image_prompts: [
-              "Autumn spice latte with cinnamon stick garnish, fall leaves in background",
-              "Ingredients laid out artistically - cinnamon sticks, nutmeg, coffee beans",
-              "Barista preparing the special autumn drink with steaming milk"
-            ],
-            video_ideas: [
-              "Recipe reveal showing the special spice blend",
-              "Customer reactions when trying the new flavor"
-            ],
-            further_suggestions: [
-              "Create a seasonal menu board highlighting fall flavors",
-              "Partner with local spice suppliers for authentic ingredients"
-            ]
-          },
-          {
-            text: "💫 Monday = Motivation Monday at Cozy Corner!\n\nStart your week with intention. Grab your favorite coffee and take a moment to set your weekly goals. We're here to fuel your ambitions with the perfect cup.\n\nWhat's one goal you're excited to work on this week? Share in the comments! ⬇️\n\n#MotivationMonday #WeeklyGoals #CommunityLove",
-            image_prompts: [
-              "Person writing in a journal with coffee cup nearby, inspiring workspace setup",
-              "Motivational quote written on a chalkboard with coffee shop ambiance",
-              "Coffee cup with steam forming inspirational shapes in the air"
-            ],
-            video_ideas: [
-              "Quick tips for setting weekly goals over coffee",
-              "Local entrepreneurs sharing their Monday motivation"
-            ],
-            further_suggestions: [
-              "Host weekly goal-setting meetups at your cafe",
-              "Create branded notebooks for customers who want to journal"
-            ]
-          }
-        ]
-      };
+      // Generate unique content based on actual business profile and form data
+      const variations = [];
+      const currentTime = new Date().getTime();
+      
+      // Create themes based on business data and form inputs
+      const baseThemes = [
+        {
+          focus: formData.focus_keywords || "community",
+          tone: businessProfile.brand_voice || "friendly",
+          cta: formData.call_to_action_goal || "engagement"
+        },
+        {
+          focus: formData.seasonal_theme || "quality",
+          tone: businessProfile.brand_voice === "professional" ? "premium" : "welcoming",
+          cta: "product showcase"
+        },
+        {
+          focus: "experience",
+          tone: "storytelling",
+          cta: formData.call_to_action_goal || "customer connection"
+        }
+      ];
+
+      for (let i = 0; i < 3; i++) {
+        const theme = baseThemes[i];
+        const uniqueId = `${currentTime}-${i}`;
+        const seasonalContext = formData.seasonal_theme ? ` with ${formData.seasonal_theme} elements` : '';
+        const keywordsContext = formData.focus_keywords ? ` highlighting ${formData.focus_keywords}` : '';
+        const locationContext = businessProfile.location ? ` in ${businessProfile.location}` : '';
+        
+        // Create unique content based on actual business data
+        let contentText = `✨ ${theme.focus.charAt(0).toUpperCase() + theme.focus.slice(1)} at ${businessProfile.business_name}! \n\n`;
+        
+        if (businessProfile.business_bio) {
+          contentText += `${businessProfile.business_bio}${seasonalContext}${keywordsContext}\n\n`;
+        }
+        
+        if (formData.call_to_action_goal === 'promotion') {
+          contentText += `🎉 Special offer for our valued customers${locationContext}!\n\n`;
+        } else if (formData.call_to_action_goal === 'engagement') {
+          contentText += `Join our community${locationContext} and be part of something special!\n\n`;
+        }
+        
+        contentText += `📍 ${businessProfile.location || 'Visit us today'} | Experience the ${businessProfile.brand_voice || 'amazing'} difference!\n`;
+        contentText += `#${businessProfile.business_name.replace(/\s+/g, '')} #${businessProfile.business_category || 'Business'} #${businessProfile.location?.replace(/\s+/g, '') || 'Local'}`;
+        
+        variations.push({
+          text: contentText,
+          image_prompts: [
+            `Professional ${businessProfile.business_category || 'business'} photography showing ${businessProfile.products_services || 'services'}, ${theme.tone} atmosphere, ${businessProfile.location || 'modern'} setting${seasonalContext}`,
+            `${businessProfile.brand_voice || 'welcoming'} styled interior of ${businessProfile.business_name}, customers enjoying ${businessProfile.products_services || 'the experience'}, warm natural lighting`,
+            `Close-up product shot of signature items from ${businessProfile.business_name}, premium quality, appealing presentation${seasonalContext}`
+          ],
+          video_ideas: [
+            `Behind-the-scenes at ${businessProfile.business_name}: ${theme.focus} in action`,
+            `Customer testimonial showcasing the ${businessProfile.brand_voice || 'excellent'} experience at ${businessProfile.business_name}`
+          ],
+          further_suggestions: [
+            `Create a ${theme.focus}-focused program for ${businessProfile.business_name} customers`,
+            `Partner with local ${businessProfile.location || 'area'} businesses for cross-promotion${seasonalContext ? ` during ${formData.seasonal_theme}` : ''}`
+          ]
+        });
+      }
+      
+      return { content_variations: variations };
     } else {
-      // Return mock personalized message
-      return "Hi {{name}}! We've missed seeing you at Cozy Corner Cafe. Come back and enjoy 15% off your next purchase - we have some exciting new seasonal drinks waiting for you!";
+      // Return personalized message based on actual customer data and business profile
+      const customerName = prompt.match(/Customer Name: ([^\n]+)/)?.[1] || "Valued Customer";
+      const purchaseHistory = prompt.match(/Purchase History: ([^\n]+)/)?.[1] || "your favorite items";
+      const segment = prompt.match(/Segment: ([^\n]+)/)?.[1] || "customer";
+      const totalSpent = prompt.match(/Total Spent: \$([^\n]+)/)?.[1] || "0";
+      
+      // Generate smart personalized content based on segment and purchase data
+      if (segment.includes("new")) {
+        return `Welcome to ${businessProfile.business_name}, ${customerName}! 🌟 We're thrilled to have you join our ${businessProfile.location || 'local'} community. Based on your interest in ${purchaseHistory}, we think you'll love our ${businessProfile.products_services || 'offerings'}. As a special welcome, enjoy 20% off your next visit when you mention this message. We can't wait to create your perfect ${businessProfile.business_category || 'experience'}!`;
+      } else if (segment.includes("vip")) {
+        return `Dear ${customerName}, 💎 Your loyalty to ${businessProfile.business_name} means everything to us! With your impressive history of ${purchaseHistory} and $${totalSpent} in purchases, we know you appreciate quality. As our VIP customer, you get exclusive early access to our new premium selections launching next week. Plus, enjoy complimentary upgrades all month. Thank you for being such an important part of our ${businessProfile.location || ''} story!`;
+      } else if (segment.includes("returning")) {
+        return `Hi ${customerName}! 👋 We love seeing you regularly at ${businessProfile.business_name}. Your consistent orders of ${purchaseHistory} show excellent taste! This week, we're featuring new items that perfectly complement your favorites from our ${businessProfile.products_services || 'menu'}. Come try them with 25% off - we're excited to expand your ${businessProfile.business_category || 'experience'} horizons!`;
+      } else if (segment.includes("at-risk")) {
+        return `We miss you, ${customerName}! 💝 It's been a while since your last visit to ${businessProfile.business_name}${businessProfile.location ? ` in ${businessProfile.location}` : ''}. We remember how much you enjoyed ${purchaseHistory} and we'd love to welcome you back. Here's 30% off your return visit - plus we have exciting new additions to our ${businessProfile.products_services || 'menu'} that we think you'll love based on your past preferences. Hope to see you soon!`;
+      } else {
+        return `Hi ${customerName}! Thanks for being part of the ${businessProfile.business_name} family${businessProfile.location ? ` here in ${businessProfile.location}` : ''}. Based on your preference for ${purchaseHistory}, we've prepared something special just for you. Visit us this week for a personalized ${businessProfile.business_category || 'experience'} that celebrates your unique taste and our ${businessProfile.brand_voice || 'exceptional'} ${businessProfile.products_services || 'service'}!`;
+      }
     }
   };
 
