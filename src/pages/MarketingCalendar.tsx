@@ -29,7 +29,7 @@ const MarketingCalendar = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Mock campaigns data
+  // Mock campaigns data with more examples including saved campaigns from content generation
   const campaigns: Campaign[] = [
     {
       id: "1",
@@ -54,6 +54,14 @@ const MarketingCalendar = () => {
       platform: "Email",
       status: "scheduled", 
       date: new Date(2024, 6, 20)
+    },
+    {
+      id: "4",
+      title: "Something magical happening at Cozy Corner Cafe today!",
+      content: "✨ There's something magical happening at Cozy Corner Cafe today! Our Seattle, WA community deserves the best, and that's exactly what we're serving up. Whether you're a regular or discovering us for the first time, prepare for an experience that'll brighten your entire afternoon. Come be part of something special! 🌟",
+      platform: "Social Media",
+      status: "scheduled",
+      date: new Date(2024, 6, 24)
     }
   ];
 

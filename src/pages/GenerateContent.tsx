@@ -86,13 +86,45 @@ const mockCustomers: Customer[] = [
   },
   {
     id: "2",
-    name: "Mike Chen",
+    name: "Mike Chen", 
     email: "mike@email.com",
     purchase_history: "Americano, croissant",
     segment: "inactive_customer",
     segment_reason: "No purchases in 90+ days",
     total_spent: 85.20,
     last_purchase_date: "2023-10-15"
+  },
+  {
+    id: "3",
+    name: "Emma Davis",
+    email: "emma@email.com", 
+    phone: "+1234567891",
+    purchase_history: "Cappuccino, pastries, coffee beans",
+    segment: "new_customer",
+    segment_reason: "Recent first-time customer",
+    total_spent: 125.00,
+    last_purchase_date: "2024-01-20"
+  },
+  {
+    id: "4",
+    name: "Alex Rodriguez",
+    email: "alex@email.com",
+    purchase_history: "Espresso, latte, catering orders",
+    segment: "vip_customer", 
+    segment_reason: "High value orders and frequent visits",
+    total_spent: 890.25,
+    last_purchase_date: "2024-01-18"
+  },
+  {
+    id: "5",
+    name: "Jessica Wong",
+    email: "jessica@email.com",
+    phone: "+1234567892",
+    purchase_history: "Tea, sandwiches, loyalty program member",
+    segment: "returning_customer",
+    segment_reason: "Regular customer with consistent visits",
+    total_spent: 275.50,
+    last_purchase_date: "2024-01-16"
   }
 ];
 
@@ -400,10 +432,10 @@ const GenerateContent = () => {
 
   // Live Customer Filtering
   useEffect(() => {
-    let filtered = customers;
-    
     if (formData.campaign_type === 'personalized') {
-      if (targetingMode === 'keyword' && formData.target_keyword) {
+      let filtered = [];
+      
+      if (targetingMode === 'keyword' && formData.target_keyword.trim()) {
         filtered = customers.filter(customer => 
           customer.purchase_history.toLowerCase().includes(formData.target_keyword.toLowerCase())
         );
@@ -412,9 +444,11 @@ const GenerateContent = () => {
           customer.segment === formData.target_segment
         );
       }
+      
+      setFilteredCustomers(filtered);
+    } else {
+      setFilteredCustomers([]);
     }
-    
-    setFilteredCustomers(filtered);
   }, [formData.target_keyword, formData.target_segment, targetingMode, customers, formData.campaign_type]);
 
   // AI Prompt Construction

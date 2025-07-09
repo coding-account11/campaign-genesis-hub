@@ -53,26 +53,98 @@ const Dashboard = () => {
     return "Good evening";
   };
 
-  const contentIdeas = [
-    {
-      title: "Share a Customer Testimonial",
-      description: "Build trust by sharing a positive review from a happy customer.",
-      priority: "high priority",
-      color: "destructive"
-    },
-    {
-      title: "Introduce a Team Member",
-      description: "Personalize your brand by featuring an employee.",
-      priority: "medium priority",
-      color: "secondary"
-    },
-    {
-      title: "Show Off a Product",
-      description: "Post a high-quality photo or video of a best-selling product.",
-      priority: "medium priority", 
-      color: "secondary"
+  const getBusinessSpecificIdeas = () => {
+    const businessName = businessProfile?.business_name || "your business";
+    const category = businessProfile?.business_category?.toLowerCase() || "business";
+    
+    if (category.includes("restaurant") || category.includes("cafe") || category.includes("food")) {
+      return [
+        {
+          title: "Feature Today's Special Menu",
+          description: `Highlight ${businessName}'s daily specials with mouth-watering descriptions and behind-the-scenes preparation shots.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Share Chef's Secret Recipe Tip",
+          description: `Give customers a peek into ${businessName}'s kitchen secrets - a cooking tip or ingredient spotlight.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Customer's Favorite Dish Story",
+          description: `Feature a regular customer and their go-to order at ${businessName}, making it personal and relatable.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
+    } else if (category.includes("retail") || category.includes("shop")) {
+      return [
+        {
+          title: "New Product Showcase",
+          description: `Introduce ${businessName}'s latest arrivals with styling tips or usage ideas.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Behind-the-Scenes Sourcing",
+          description: `Show how ${businessName} selects quality products and the story behind your curated selection.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Customer Style Feature",
+          description: `Highlight how real customers style or use products from ${businessName}.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
+    } else if (category.includes("service") || category.includes("health") || category.includes("beauty")) {
+      return [
+        {
+          title: "Client Success Transformation",
+          description: `Share a before/after story showcasing ${businessName}'s impact on a client's life or goals.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Expert Tips & Advice",
+          description: `Share professional insights and tips that position ${businessName} as the go-to expert in your field.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Team Member Spotlight",
+          description: `Introduce the skilled professionals at ${businessName} and their unique expertise.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
+    } else {
+      return [
+        {
+          title: "Share a Customer Success Story",
+          description: `Highlight how ${businessName} made a real difference in a customer's experience.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Behind-the-Scenes Content",
+          description: `Give customers a peek into the daily operations and passion behind ${businessName}.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Community Impact Story",
+          description: `Show how ${businessName} contributes to and supports the local community.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
     }
-  ];
+  };
+
+  const contentIdeas = getBusinessSpecificIdeas();
 
   if (loading) {
     return (
@@ -231,28 +303,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Missed Connections Widget - Only show if there are inactive customers */}
-      {hasInactiveCustomers && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-amber-800 mb-2">Missed Connections</h3>
-                <p className="text-amber-700 mb-4">
-                  You have {inactiveCustomersCount} customers who haven't heard from you in 60+ days
-                </p>
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate("/generate-content?reactivation=true")}
-                  className="border-amber-300 text-amber-800 hover:bg-amber-100"
-                >
-                  Generate Win-Back Emails
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -272,7 +322,7 @@ const Dashboard = () => {
                 <div 
                   key={index}
                   className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                  onClick={() => navigate(`/generate-content?idea=${encodeURIComponent(idea.title)}`)}
+                  onClick={() => navigate('/generate-content', { state: { suggestion: `${idea.title}: ${idea.description}` } })}
                 >
                   <div className="flex-1">
                     <h4 className="font-medium mb-1">{idea.title}</h4>

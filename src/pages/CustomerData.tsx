@@ -130,6 +130,46 @@ const CustomerData = () => {
     });
 
     setTimeout(() => {
+      // Simulate adding new customers to the existing database
+      const newCustomers = [
+        {
+          id: "6",
+          name: "Jennifer Smith",
+          email: "jennifer@email.com",
+          phone: "555-0101",
+          purchaseHistory: "Cold brew, protein bars, breakfast sandwiches",
+          segment: "new",
+          segmentReason: "High engagement new customer",
+          totalSpent: 89.75,
+          lastPurchaseDate: "2024-01-22"
+        },
+        {
+          id: "7", 
+          name: "Robert Taylor",
+          email: "robert@email.com",
+          phone: "555-0102",
+          purchaseHistory: "Espresso, pastries, catering orders",
+          segment: "vip",
+          segmentReason: "High-value business customer",
+          totalSpent: 1200.50,
+          lastPurchaseDate: "2024-01-19"
+        },
+        {
+          id: "8",
+          name: "Lisa Garcia",
+          email: "lisa@email.com",
+          purchaseHistory: "Tea, light snacks, occasional coffee",
+          segment: "at-risk",
+          segmentReason: "Declining visit frequency",
+          totalSpent: 156.25,
+          lastPurchaseDate: "2024-01-10"
+        }
+      ];
+      
+      // Add the new customers to the existing customer list
+      // In a real app, this would update the database/state
+      console.log('New customers would be added:', newCustomers);
+      
       toast({
         title: "Successfully imported 57 customers!",
         description: "AI-powered segmentation completed. Customers have been categorized based on spending patterns, frequency, and behavior."

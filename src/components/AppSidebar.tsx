@@ -74,7 +74,7 @@ export function AppSidebar() {
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
       ? "bg-primary text-primary-foreground font-medium" 
-      : "hover:bg-accent hover:text-accent-foreground";
+      : "text-foreground hover:bg-accent hover:text-accent-foreground";
 
   return (
     <Sidebar
