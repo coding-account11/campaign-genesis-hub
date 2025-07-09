@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,8 +29,8 @@ const MarketingCalendar = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Mock campaigns data with more examples including saved campaigns from content generation
-  const campaigns: Campaign[] = [
+  // Load campaigns from localStorage and combine with mock data
+  const [campaigns, setCampaigns] = useState<Campaign[]>([
     {
       id: "1",
       title: "Monday Morning Special",
@@ -63,7 +63,20 @@ const MarketingCalendar = () => {
       status: "scheduled",
       date: new Date(2024, 6, 24)
     }
-  ];
+  ]);
+
+  // Load saved campaigns from localStorage
+  useEffect(() => {
+    const savedCampaigns = JSON.parse(localStorage.getItem('savedCampaigns') || '[]');
+    if (savedCampaigns.length > 0) {
+      // Convert date strings back to Date objects
+      const processedCampaigns = savedCampaigns.map((campaign: any) => ({
+        ...campaign,
+        date: new Date(campaign.date)
+      }));
+      setCampaigns(prev => [...prev, ...processedCampaigns]);
+    }
+  }, []);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",

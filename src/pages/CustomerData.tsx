@@ -61,8 +61,8 @@ const CustomerData = () => {
     segment: "new"
   });
 
-  // Mock customer data
-  const [customers] = useState<Customer[]>([
+  // Mock customer data - make it mutable so we can add new customers
+  const [customers, setCustomers] = useState<Customer[]>([
     {
       id: "1",
       name: "Sarah Johnson",
@@ -158,6 +158,7 @@ const CustomerData = () => {
           id: "8",
           name: "Lisa Garcia",
           email: "lisa@email.com",
+          phone: "555-0103",
           purchaseHistory: "Tea, light snacks, occasional coffee",
           segment: "at-risk",
           segmentReason: "Declining visit frequency",
@@ -167,8 +168,8 @@ const CustomerData = () => {
       ];
       
       // Add the new customers to the existing customer list
-      // In a real app, this would update the database/state
-      console.log('New customers would be added:', newCustomers);
+      setCustomers(prevCustomers => [...prevCustomers, ...newCustomers]);
+      console.log('New customers added:', newCustomers);
       
       toast({
         title: "Successfully imported 57 customers!",
@@ -180,6 +181,19 @@ const CustomerData = () => {
 
   const handleAddCustomer = () => {
     // Add customer logic here
+    const newCustomerData: Customer = {
+      id: `manual-${Date.now()}`,
+      name: newCustomer.name,
+      email: newCustomer.email,
+      phone: newCustomer.phone,
+      purchaseHistory: newCustomer.purchaseHistory,
+      segment: newCustomer.segment,
+      segmentReason: "Manually added customer",
+      totalSpent: 0,
+      lastPurchaseDate: new Date().toISOString().split('T')[0]
+    };
+    
+    setCustomers(prevCustomers => [...prevCustomers, newCustomerData]);
     toast({
       title: "Customer added",
       description: `${newCustomer.name} has been added to your customer database.`

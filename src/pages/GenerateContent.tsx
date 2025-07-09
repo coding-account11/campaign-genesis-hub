@@ -651,8 +651,24 @@ const GenerateContent = () => {
   const saveCampaign = async (text: string, date: Date) => {
     setIsSaving(true);
     try {
-      // Simulate saving
+      // Create campaign object
+      const newCampaign = {
+        id: `campaign-${Date.now()}`,
+        title: text.split('\n')[0].replace(/[^\w\s]/gi, '').trim().substring(0, 50) || 'Generated Campaign',
+        content: text,
+        platform: formData.platform === 'social_media' ? 'Social Media' : formData.platform === 'email' ? 'Email' : 'Direct Message',
+        status: 'scheduled' as const,
+        date: date
+      };
+      
+      // Save to localStorage for MarketingCalendar to access
+      const existingCampaigns = JSON.parse(localStorage.getItem('savedCampaigns') || '[]');
+      existingCampaigns.push(newCampaign);
+      localStorage.setItem('savedCampaigns', JSON.stringify(existingCampaigns));
+      
+      // Simulate saving delay
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
       toast({
         title: "Campaign saved!",
         description: `Campaign scheduled for ${format(date, "PPP")}.`
