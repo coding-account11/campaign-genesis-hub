@@ -259,9 +259,9 @@ const MarketingCalendar = () => {
         </CardContent>
       </Card>
 
-      {/* Campaign Details Card */}
+      {/* Campaign Details Card - Only show if campaign is clicked */}
       {selectedCampaign && (
-        <Card>
+        <Card className="mt-6">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>

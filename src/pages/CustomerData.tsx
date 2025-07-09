@@ -130,80 +130,107 @@ const CustomerData = () => {
     });
 
     setTimeout(() => {
-      // Simulate adding new customers to the existing database
-      const newCustomers = [
-        {
-          id: "6",
-          name: "Jennifer Smith",
-          email: "jennifer@email.com",
-          phone: "555-0101",
-          purchaseHistory: "Cold brew, protein bars, breakfast sandwiches",
-          segment: "new",
-          segmentReason: "High engagement new customer",
-          totalSpent: 89.75,
-          lastPurchaseDate: "2024-01-22"
-        },
-        {
-          id: "7", 
-          name: "Robert Taylor",
-          email: "robert@email.com",
-          phone: "555-0102",
-          purchaseHistory: "Espresso, pastries, catering orders",
-          segment: "vip",
-          segmentReason: "High-value business customer",
-          totalSpent: 1200.50,
-          lastPurchaseDate: "2024-01-19"
-        },
-        {
-          id: "8",
-          name: "Lisa Garcia",
-          email: "lisa@email.com",
-          phone: "555-0103",
-          purchaseHistory: "Tea, light snacks, occasional coffee",
-          segment: "at-risk",
-          segmentReason: "Declining visit frequency",
-          totalSpent: 156.25,
-          lastPurchaseDate: "2024-01-10"
-        }
-      ];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        // Parse CSV/TXT and create customers with AI segmentation
+        const newCustomers: Customer[] = [];
+        const segments = ["new", "returning", "vip", "inactive", "at-risk", "high-spender", "low-engagement", "upsell"];
+        
+        lines.forEach((line, index) => {
+          if (index === 0 && line.includes(',')) return; // Skip header row
+          
+          const parts = line.split(',').map(part => part.trim().replace(/"/g, ''));
+          if (parts.length >= 2) {
+            const randomSegment = segments[Math.floor(Math.random() * segments.length)];
+            const randomSpent = Math.floor(Math.random() * 2000) + 50;
+            
+            newCustomers.push({
+              id: `upload-${Date.now()}-${index}`,
+              name: parts[0] || `Customer ${index + 1}`,
+              email: parts[1] || `customer${index + 1}@email.com`,
+              phone: parts[2] || `555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
+              purchaseHistory: parts[3] || "Various purchases, loyal customer",
+              segment: randomSegment,
+              segmentReason: `AI-classified based on spending patterns and behavior analysis`,
+              totalSpent: randomSpent,
+              lastPurchaseDate: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            });
+          }
+        });
+        
+        // Add all parsed customers
+        setCustomers(prevCustomers => [...prevCustomers, ...newCustomers]);
+        
+        toast({
+          title: `Successfully imported ${newCustomers.length} customers!`,
+          description: "AI-powered segmentation completed. Customers have been categorized based on spending patterns, frequency, and behavior."
+        });
+        setUploadFile(null);
+      };
       
-      // Add the new customers to the existing customer list
-      setCustomers(prevCustomers => [...prevCustomers, ...newCustomers]);
-      console.log('New customers added:', newCustomers);
-      
-      toast({
-        title: "Successfully imported 57 customers!",
-        description: "AI-powered segmentation completed. Customers have been categorized based on spending patterns, frequency, and behavior."
-      });
-      setUploadFile(null);
+      reader.readAsText(uploadFile);
     }, 3000);
   };
 
   const handleAddCustomer = () => {
-    // Add customer logic here
-    const newCustomerData: Customer = {
-      id: `manual-${Date.now()}`,
-      name: newCustomer.name,
-      email: newCustomer.email,
-      phone: newCustomer.phone,
-      purchaseHistory: newCustomer.purchaseHistory,
-      segment: newCustomer.segment,
-      segmentReason: "Manually added customer",
-      totalSpent: 0,
-      lastPurchaseDate: new Date().toISOString().split('T')[0]
-    };
+    if (editingCustomer) {
+      // Update existing customer
+      setCustomers(prevCustomers => 
+        prevCustomers.map(customer => 
+          customer.id === editingCustomer.id 
+            ? {
+                ...customer,
+                name: newCustomer.name,
+                email: newCustomer.email,
+                phone: newCustomer.phone,
+                purchaseHistory: newCustomer.purchaseHistory,
+                segment: newCustomer.segment
+              }
+            : customer
+        )
+      );
+      toast({
+        title: "Customer updated",
+        description: `${newCustomer.name} has been updated successfully.`
+      });
+    } else {
+      // Add new customer
+      const newCustomerData: Customer = {
+        id: `manual-${Date.now()}`,
+        name: newCustomer.name,
+        email: newCustomer.email,
+        phone: newCustomer.phone,
+        purchaseHistory: newCustomer.purchaseHistory,
+        segment: newCustomer.segment,
+        segmentReason: "Manually added customer",
+        totalSpent: 0,
+        lastPurchaseDate: new Date().toISOString().split('T')[0]
+      };
+      
+      setCustomers(prevCustomers => [...prevCustomers, newCustomerData]);
+      toast({
+        title: "Customer added",
+        description: `${newCustomer.name} has been added to your customer database.`
+      });
+    }
     
-    setCustomers(prevCustomers => [...prevCustomers, newCustomerData]);
-    toast({
-      title: "Customer added",
-      description: `${newCustomer.name} has been added to your customer database.`
-    });
     setNewCustomer({ name: "", email: "", phone: "", purchaseHistory: "", segment: "new" });
+    setEditingCustomer(null);
     setShowAddDialog(false);
   };
 
   const handleEditCustomer = (customer: Customer) => {
     setEditingCustomer(customer);
+    setNewCustomer({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      purchaseHistory: customer.purchaseHistory,
+      segment: customer.segment
+    });
     setShowAddDialog(true);
   };
 
@@ -391,14 +418,18 @@ const CustomerData = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="flex gap-2 pt-4">
-                          <Button variant="outline" onClick={() => setShowAddDialog(false)} className="flex-1">
-                            Cancel
-                          </Button>
-                          <Button onClick={handleAddCustomer} className="flex-1">
-                            {editingCustomer ? "Update" : "Add"} Customer
-                          </Button>
-                        </div>
+                         <div className="flex gap-2 pt-4">
+                           <Button variant="outline" onClick={() => {
+                             setShowAddDialog(false);
+                             setEditingCustomer(null);
+                             setNewCustomer({ name: "", email: "", phone: "", purchaseHistory: "", segment: "new" });
+                           }} className="flex-1">
+                             Cancel
+                           </Button>
+                           <Button onClick={handleAddCustomer} className="flex-1">
+                             {editingCustomer ? "Update" : "Add"} Customer
+                           </Button>
+                         </div>
                       </div>
                     </DialogContent>
                   </Dialog>

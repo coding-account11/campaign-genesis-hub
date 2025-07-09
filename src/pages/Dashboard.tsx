@@ -17,12 +17,70 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Mock data - in real app this would come from your backend
-  const stats = {
-    activeCampaigns: 3,
+  // Load dynamic stats from localStorage and customer data
+  const [stats, setStats] = useState({
+    activeCampaigns: 0,
     todaysCampaigns: 0,
-    totalCustomers: 3
-  };
+    totalCustomers: 0
+  });
+
+  // Update stats when component mounts
+  useEffect(() => {
+    const updateStats = () => {
+      // Get campaigns from localStorage
+      const savedCampaigns = JSON.parse(localStorage.getItem('savedCampaigns') || '[]');
+      const allCampaigns = [...mockCampaigns, ...savedCampaigns]; // Include both mock and saved
+      
+      // Count today's campaigns
+      const today = new Date();
+      const todaysCampaigns = allCampaigns.filter(campaign => {
+        const campaignDate = new Date(campaign.date);
+        return campaignDate.toDateString() === today.toDateString();
+      }).length;
+
+      // Get customer count - try to get from customer data component or use default
+      const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
+      const totalCustomers = Math.max(customerData.length, 3); // At least 3 from mock data
+
+      setStats({
+        activeCampaigns: allCampaigns.length,
+        todaysCampaigns: todaysCampaigns,
+        totalCustomers: totalCustomers
+      });
+    };
+
+    updateStats();
+    
+    // Listen for storage changes to update stats
+    const handleStorageChange = () => updateStats();
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Mock campaigns for counting
+  const mockCampaigns = [
+    {
+      id: "1",
+      title: "Monday Morning Special",
+      date: new Date(2024, 6, 15)
+    },
+    {
+      id: "2", 
+      title: "Customer Spotlight",
+      date: new Date(2024, 6, 18)
+    },
+    {
+      id: "3",
+      title: "Weekend Brunch Menu",
+      date: new Date(2024, 6, 20)
+    },
+    {
+      id: "4",
+      title: "Something magical happening at Cozy Corner Cafe today!",
+      date: new Date(2024, 6, 24)
+    }
+  ];
 
   const hasInactiveCustomers = true; // Mock - would be calculated based on customer data
   const inactiveCustomersCount = 15;
