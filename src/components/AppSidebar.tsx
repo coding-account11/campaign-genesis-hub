@@ -1,0 +1,125 @@
+import { NavLink, useLocation } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Building2, 
+  Sparkles, 
+  Calendar, 
+  Users,
+  Settings,
+  HelpCircle
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+
+const navigationItems = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: LayoutDashboard,
+    group: "MARKETING HUB"
+  },
+  {
+    title: "Business Profile",
+    url: "/business-profile",
+    icon: Building2,
+    group: "MARKETING HUB"
+  },
+  {
+    title: "Generate Content",
+    url: "/generate-content",
+    icon: Sparkles,
+    group: "MARKETING HUB"
+  },
+  {
+    title: "Marketing Calendar",
+    url: "/marketing-calendar",
+    icon: Calendar,
+    group: "MARKETING HUB"
+  },
+  {
+    title: "Customer Data",
+    url: "/customer-data",
+    icon: Users,
+    group: "MARKETING HUB"
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+    group: "MARKETING HUB"
+  },
+  {
+    title: "Support",
+    url: "/support",
+    icon: HelpCircle,
+    group: "MARKETING HUB"
+  }
+];
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const isCollapsed = state === "collapsed";
+
+  const getNavCls = ({ isActive }: { isActive: boolean }) =>
+    isActive 
+      ? "bg-primary text-primary-foreground font-medium" 
+      : "hover:bg-accent hover:text-accent-foreground";
+
+  return (
+    <Sidebar
+      collapsible="icon"
+    >
+      {/* Logo and Brand */}
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          {!isCollapsed && (
+            <div>
+              <h1 className="font-bold text-lg">PromoPal</h1>
+              <p className="text-xs text-muted-foreground">AI Marketing Assistant</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
+            MARKETING HUB
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navigationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url} 
+                      end={item.url === "/"}
+                      className={getNavCls}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
