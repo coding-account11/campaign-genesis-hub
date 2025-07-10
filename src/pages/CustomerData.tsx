@@ -137,27 +137,38 @@ const CustomerData = () => {
         const text = e.target?.result as string;
         
         // Create comprehensive prompt for Gemini to analyze customer data
+        const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
+        
         const prompt = `
-          Parse the following customer data file and map it to our customer database structure. Be conservative and accurate - only use data that is actually present.
+          Parse the following customer data file and map it to our customer database structure. Use ALL available business context to make intelligent deductions.
           
-          FILE CONTENT:
+          BUSINESS CONTEXT:
+          - Business Name: ${businessProfile.businessName || 'N/A'}
+          - Business Category: ${businessProfile.businessCategory || 'N/A'}
+          - Products/Services: ${businessProfile.productsServices || 'N/A'}
+          - Business Description: ${businessProfile.businessBio || 'N/A'}
+          
+          CUSTOMER FILE CONTENT:
           ${text}
           
-          CRITICAL INSTRUCTIONS:
+          INTELLIGENT PROCESSING INSTRUCTIONS:
           1. Parse all customer records from the file (CSV, TXT, or any format)
           2. Map columns intelligently - common variations like:
              - Name: "name", "customer_name", "full_name", "first_name + last_name", "client_name"
              - Email: "email", "email_address", "e_mail", "contact_email"
              - Phone: "phone", "phone_number", "contact_number", "mobile", "tel"
              - Purchase info: "purchase_history", "orders", "transactions", "notes", "comments", "products"
-          3. For missing or unclear fields, use "N/A" - DO NOT generate fake data
-          4. Only assign segments based on actual data present:
-             - If you can determine spending patterns: "high-spender", "low-engagement"
-             - If you can see purchase frequency: "new", "returning", "inactive"
+          3. SMART SPENDING CALCULATION: If purchase history mentions specific items/services:
+             - Cross-reference with business products/services and typical pricing
+             - Use business context to estimate realistic spending amounts
+             - Consider industry standards for the business category
+          4. CONSERVATIVE FALLBACK: For missing or unclear fields, use "N/A" - DO NOT generate fake data
+          5. Segment assignment based on deduced or actual data:
+             - Use spending patterns, purchase frequency, and business context
              - If data is insufficient: use "new" as default
-          5. For totalSpent: only use if actual spending data exists, otherwise use 0
-          6. For lastPurchaseDate: only use if date data exists, otherwise use "N/A"
-          7. Be extremely conservative - accuracy over completeness
+          6. For totalSpent: Use intelligent deduction from purchase history + business context, otherwise 0
+          7. For lastPurchaseDate: Use actual dates if present, otherwise "N/A"
+          8. Prioritize accuracy but leverage ALL available context for intelligent deduction
           
           Return ONLY a valid JSON object with this structure:
           {
@@ -167,8 +178,8 @@ const CustomerData = () => {
                 "email": "actual email from data or N/A", 
                 "phone": "actual phone from data or N/A",
                 "purchaseHistory": "actual purchase info from data or N/A",
-                "segment": "conservative segment based on actual data",
-                "segmentReason": "brief reason based only on available data",
+                "segment": "segment based on deduced or actual data",
+                "segmentReason": "reasoning based on available data and business context",
                 "totalSpent": 0,
                 "lastPurchaseDate": "N/A"
               }
