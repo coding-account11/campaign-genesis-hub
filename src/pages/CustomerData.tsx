@@ -138,38 +138,39 @@ const CustomerData = () => {
         
         // Create comprehensive prompt for Gemini to analyze customer data
         const prompt = `
-          Analyze the following customer data file and extract structured customer information with intelligent segmentation:
+          Parse the following customer data file and map it to our customer database structure. Be conservative and accurate - only use data that is actually present.
           
           FILE CONTENT:
           ${text}
           
-          INSTRUCTIONS:
+          CRITICAL INSTRUCTIONS:
           1. Parse all customer records from the file (CSV, TXT, or any format)
-          2. Extract: name, email, phone, purchase history/notes
-          3. Assign intelligent customer segments based on available data:
-             - "new": First-time or recent customers
-             - "returning": Regular customers with consistent activity
-             - "vip": High-value customers with premium spending
-             - "inactive": Customers who haven't engaged recently
-             - "at-risk": Customers showing declining engagement
-             - "high-spender": Above-average spending patterns
-             - "low-engagement": Minimal interaction customers
-             - "upsell": Potential for service expansion
-          4. Provide reasoning for each segment assignment
-          5. Generate realistic spending amounts and recent purchase dates
+          2. Map columns intelligently - common variations like:
+             - Name: "name", "customer_name", "full_name", "first_name + last_name", "client_name"
+             - Email: "email", "email_address", "e_mail", "contact_email"
+             - Phone: "phone", "phone_number", "contact_number", "mobile", "tel"
+             - Purchase info: "purchase_history", "orders", "transactions", "notes", "comments", "products"
+          3. For missing or unclear fields, use "N/A" - DO NOT generate fake data
+          4. Only assign segments based on actual data present:
+             - If you can determine spending patterns: "high-spender", "low-engagement"
+             - If you can see purchase frequency: "new", "returning", "inactive"
+             - If data is insufficient: use "new" as default
+          5. For totalSpent: only use if actual spending data exists, otherwise use 0
+          6. For lastPurchaseDate: only use if date data exists, otherwise use "N/A"
+          7. Be extremely conservative - accuracy over completeness
           
           Return ONLY a valid JSON object with this structure:
           {
             "customers": [
               {
-                "name": "Customer Name",
-                "email": "email@domain.com",
-                "phone": "phone number",
-                "purchaseHistory": "purchase details and preferences",
-                "segment": "segment_value",
-                "segmentReason": "AI reasoning for this segment",
-                "totalSpent": 150.00,
-                "lastPurchaseDate": "2024-01-15"
+                "name": "actual name from data or N/A",
+                "email": "actual email from data or N/A", 
+                "phone": "actual phone from data or N/A",
+                "purchaseHistory": "actual purchase info from data or N/A",
+                "segment": "conservative segment based on actual data",
+                "segmentReason": "brief reason based only on available data",
+                "totalSpent": 0,
+                "lastPurchaseDate": "N/A"
               }
             ]
           }
