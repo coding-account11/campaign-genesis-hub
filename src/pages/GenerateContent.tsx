@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
+import { useLocation } from "react-router-dom";
 
 interface ContentVariation {
   title: string;
@@ -28,6 +29,7 @@ interface ContentVariation {
 
 const GenerateContent = () => {
   const { toast } = useToast();
+  const location = useLocation();
   const [campaignType, setCampaignType] = useState("personalized");
   const [platformType, setPlatformType] = useState("direct");
   const [targetAudience, setTargetAudience] = useState("keyword");
@@ -40,6 +42,80 @@ const GenerateContent = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<ContentVariation[]>([]);
   const [personalizedCount, setPersonalizedCount] = useState(0);
+
+  // Get customer data for real-time calculations
+  const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
+  const segments = [...new Set(customerData.map((c: any) => c.segment))].filter(Boolean) as string[];
+
+  // Calculate keyword matches in real-time
+  const keywordMatches = useMemo(() => {
+    if (!targetKeyword.trim()) return 0;
+    return customerData.filter((customer: any) => 
+      customer.purchaseHistory?.toLowerCase().includes(targetKeyword.toLowerCase())
+    ).length;
+  }, [targetKeyword, customerData]);
+
+  // Calculate segment customer counts
+  const segmentCounts = useMemo(() => {
+    return segments.reduce((acc, segment) => {
+      acc[segment] = customerData.filter((customer: any) => customer.segment === segment).length;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [segments, customerData]);
+
+  // Handle URL parameters for suggestions
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const suggestion = urlParams.get('suggestion');
+    const title = urlParams.get('title');
+    const description = urlParams.get('description');
+    
+    if (suggestion) {
+      // Auto-populate based on suggestion type
+      switch (suggestion) {
+        case 'personalized-email':
+          setCampaignType('personalized');
+          setPlatformType('direct');
+          setCallToActionGoal('make_purchase');
+          setAdditionalInstructions(description || 'Create personalized email content based on customer purchase history to drive repeat sales.');
+          break;
+        case 'seasonal-promo':
+          setCampaignType('general');
+          setPlatformType('social');
+          setSeasonalTheme('holiday');
+          setCallToActionGoal('visit_store');
+          setAdditionalInstructions(description || 'Create seasonal promotional content to increase foot traffic and holiday sales.');
+          break;
+        case 'loyalty-program':
+          setCampaignType('personalized');
+          setPlatformType('direct');
+          setCallToActionGoal('join_loyalty');
+          setAdditionalInstructions(description || 'Promote loyalty program benefits to encourage customer retention and repeat business.');
+          break;
+        case 'local-event':
+          setCampaignType('general');
+          setPlatformType('local');
+          setCallToActionGoal('visit_store');
+          setAdditionalInstructions(description || 'Promote local events or community engagement to build brand awareness.');
+          break;
+        default:
+          if (description) {
+            setAdditionalInstructions(description);
+          }
+      }
+      
+      // Clear URL parameters after setting values
+      window.history.replaceState({}, '', location.pathname);
+    }
+  }, [location]);
+
+  // Handle campaign type change - reset platform type for personalized
+  const handleCampaignTypeChange = (value: string) => {
+    setCampaignType(value);
+    if (value === "personalized") {
+      setPlatformType("direct");
+    }
+  };
 
   const generateContent = async () => {
     if (!callToActionGoal || !additionalInstructions) {
@@ -230,9 +306,6 @@ const GenerateContent = () => {
     });
   };
 
-  // Get customer segments for targeting
-  const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
-  const segments = [...new Set(customerData.map((c: any) => c.segment))].filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
@@ -266,7 +339,7 @@ const GenerateContent = () => {
               {/* Campaign Type */}
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Campaign Type</Label>
-                <RadioGroup value={campaignType} onValueChange={setCampaignType}>
+                <RadioGroup value={campaignType} onValueChange={handleCampaignTypeChange}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="general" id="general" />
                     <Label htmlFor="general" className="flex items-center gap-2">
@@ -293,29 +366,37 @@ const GenerateContent = () => {
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Platform Type</Label>
                 <RadioGroup value={platformType} onValueChange={setPlatformType}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="direct" id="direct" />
-                    <Label htmlFor="direct" className="text-sm">Direct to Customer</Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground ml-6">Personalized Email or Text Messages</p>
-                  
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="social" id="social" />
-                    <Label htmlFor="social" className="text-sm">Social Media Post</Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground ml-6">Facebook, Instagram, Twitter, etc.</p>
-                  
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="email" id="email" />
-                    <Label htmlFor="email" className="text-sm">Email Campaign</Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground ml-6">Newsletter or promotional email</p>
-                  
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="local" id="local" />
-                    <Label htmlFor="local" className="text-sm">Local Advertisement</Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground ml-6">Google Ads, local listings, print media</p>
+                  {campaignType === "personalized" ? (
+                    // Only Direct to Customer for personalized marketing
+                    <>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="direct" id="direct" />
+                        <Label htmlFor="direct" className="text-sm">Direct to Customer</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-6">Personalized Email or Text Messages</p>
+                    </>
+                  ) : (
+                    // All options for general marketing
+                    <>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="social" id="social" />
+                        <Label htmlFor="social" className="text-sm">Social Media Post</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-6">Facebook, Instagram, Twitter, etc.</p>
+                      
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="email" id="email" />
+                        <Label htmlFor="email" className="text-sm">Email Campaign</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-6">Newsletter or promotional email</p>
+                      
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="local" id="local" />
+                        <Label htmlFor="local" className="text-sm">Local Advertisement</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-6">Google Ads, local listings, print media</p>
+                    </>
+                  )}
                 </RadioGroup>
               </div>
 
@@ -338,12 +419,20 @@ const GenerateContent = () => {
                     </RadioGroup>
                     
                     {targetAudience === "keyword" && (
-                      <Input
-                        placeholder="e.g., coffee, new shoes, VIP"
-                        value={targetKeyword}
-                        onChange={(e) => setTargetKeyword(e.target.value)}
-                        className="mt-2"
-                      />
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="e.g., coffee, new shoes, VIP"
+                          value={targetKeyword}
+                          onChange={(e) => setTargetKeyword(e.target.value)}
+                          className="mt-2"
+                        />
+                        {targetKeyword && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Users className="w-3 h-3" />
+                            <span>{keywordMatches} customers match this keyword</span>
+                          </div>
+                        )}
+                      </div>
                     )}
                     
                     {targetAudience === "segment" && (
@@ -354,7 +443,12 @@ const GenerateContent = () => {
                         <SelectContent>
                           {segments.map((segment) => (
                             <SelectItem key={segment} value={segment}>
-                              {segment}
+                              <div className="flex items-center justify-between w-full">
+                                <span>{segment}</span>
+                                <Badge variant="outline" className="ml-2">
+                                  {segmentCounts[segment]} customers
+                                </Badge>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>

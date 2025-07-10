@@ -65,15 +65,16 @@ const MarketingCalendar = () => {
     }
   ]);
 
-  // Load saved campaigns from localStorage
+  // Load saved campaigns from localStorage on component mount
   useEffect(() => {
-    const savedCampaigns = JSON.parse(localStorage.getItem('savedCampaigns') || '[]');
+    const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
     if (savedCampaigns.length > 0) {
-      // Convert date strings back to Date objects
+      // Convert date strings back to Date objects and merge with default campaigns
       const processedCampaigns = savedCampaigns.map((campaign: any) => ({
         ...campaign,
         date: new Date(campaign.date)
       }));
+      // Replace all campaigns with processed ones to maintain consistency
       setCampaigns(prev => [...prev, ...processedCampaigns]);
     }
   }, []);
@@ -157,13 +158,14 @@ const MarketingCalendar = () => {
 
   const handleDeleteCampaign = () => {
     if (selectedCampaign) {
-      // Remove campaign from state
-      setCampaigns(prev => prev.filter(campaign => campaign.id !== selectedCampaign.id));
+      // Remove campaign from both local state and localStorage
+      const updatedCampaigns = campaigns.filter(campaign => campaign.id !== selectedCampaign.id);
+      setCampaigns(updatedCampaigns);
       
-      // Remove from localStorage
+      // Update localStorage with the filtered campaigns (remove hard-coded ones too)
       const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
-      const updatedCampaigns = savedCampaigns.filter((campaign: any) => campaign.id !== selectedCampaign.id);
-      localStorage.setItem('campaigns', JSON.stringify(updatedCampaigns));
+      const updatedSavedCampaigns = savedCampaigns.filter((campaign: any) => campaign.id !== selectedCampaign.id);
+      localStorage.setItem('campaigns', JSON.stringify(updatedSavedCampaigns));
       
       toast({
         title: "Campaign deleted",

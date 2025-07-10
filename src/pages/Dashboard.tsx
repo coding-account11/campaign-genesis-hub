@@ -27,23 +27,23 @@ const Dashboard = () => {
   // Update stats when component mounts
   useEffect(() => {
     const updateStats = () => {
-      // Get campaigns from localStorage
-      const savedCampaigns = JSON.parse(localStorage.getItem('savedCampaigns') || '[]');
-      const allCampaigns = [...mockCampaigns, ...savedCampaigns]; // Include both mock and saved
+      // Get campaigns from localStorage (both mock and saved)
+      const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+      const totalCampaigns = mockCampaigns.length + savedCampaigns.length;
       
       // Count today's campaigns
       const today = new Date();
-      const todaysCampaigns = allCampaigns.filter(campaign => {
+      const todaysCampaigns = [...mockCampaigns, ...savedCampaigns].filter(campaign => {
         const campaignDate = new Date(campaign.date);
         return campaignDate.toDateString() === today.toDateString();
       }).length;
 
-      // Get customer count - try to get from customer data component or use default
+      // Get customer count from customer data
       const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
-      const totalCustomers = Math.max(customerData.length, 3); // At least 3 from mock data
+      const totalCustomers = customerData.length;
 
       setStats({
-        activeCampaigns: allCampaigns.length,
+        activeCampaigns: totalCampaigns,
         todaysCampaigns: todaysCampaigns,
         totalCustomers: totalCustomers
       });
@@ -380,7 +380,19 @@ const Dashboard = () => {
                 <div 
                   key={index}
                   className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                  onClick={() => navigate('/generate-content', { state: { suggestion: `${idea.title}: ${idea.description}` } })}
+                  onClick={() => {
+                    // Map suggestions to URL parameters for auto-population
+                    let suggestionType = 'general';
+                    if (idea.title.toLowerCase().includes('special') || idea.title.toLowerCase().includes('menu')) {
+                      suggestionType = 'seasonal-promo';
+                    } else if (idea.title.toLowerCase().includes('customer') || idea.title.toLowerCase().includes('story')) {
+                      suggestionType = 'personalized-email';
+                    } else if (idea.title.toLowerCase().includes('community') || idea.title.toLowerCase().includes('local')) {
+                      suggestionType = 'local-event';
+                    }
+                    
+                    navigate(`/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(idea.title)}&description=${encodeURIComponent(idea.description)}`);
+                  }}
                 >
                   <div className="flex-1">
                     <h4 className="font-medium mb-1">{idea.title}</h4>
