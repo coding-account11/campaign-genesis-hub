@@ -73,23 +73,24 @@ export function AppSidebar() {
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-primary text-primary-foreground font-medium" 
-      : "text-foreground hover:bg-accent hover:text-accent-foreground";
+      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
+      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground";
 
   return (
     <Sidebar
       collapsible="icon"
+      className="bg-sidebar border-sidebar-border"
     >
       {/* Logo and Brand */}
-      <div className="p-6 border-b">
+      <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="font-bold text-lg text-foreground">PromoPal</h1>
-              <p className="text-xs text-muted-foreground">AI Marketing Assistant</p>
+              <h1 className="font-bold text-lg text-sidebar-foreground">PromoPal</h1>
+              <p className="text-xs text-sidebar-foreground/60">AI Marketing Assistant</p>
             </div>
           )}
         </div>
@@ -97,7 +98,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
+          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider px-3 py-2">
             MARKETING HUB
           </SidebarGroupLabel>
           <SidebarGroupContent>
