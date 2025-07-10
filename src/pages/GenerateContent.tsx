@@ -20,7 +20,10 @@ import {
   Users,
   Calendar,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  Instagram,
+  Facebook,
+  Twitter
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -36,15 +39,17 @@ const GenerateContent = () => {
   const { toast } = useToast();
   const [campaignName, setCampaignName] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState("");
   const [selectedTone, setSelectedTone] = useState("");
+  const [seasonalTheme, setSeasonalTheme] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
   const [description, setDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<ContentVariation[]>([]);
   const [personalizedCount, setPersonalizedCount] = useState(0);
-  const [showSaveOptions, setShowSaveOptions] = useState(false);
 
   const generateContent = async () => {
-    if (!campaignName || !selectedType || !selectedTone || !description) {
+    if (!campaignName || !selectedType || !selectedPlatform || !selectedTone || !description) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields before generating content.",
@@ -105,7 +110,10 @@ const GenerateContent = () => {
         CAMPAIGN DETAILS:
         - Campaign Name: ${campaignName}
         - Content Type: ${selectedType}
+        - Platform: ${selectedPlatform}
         - Tone: ${selectedTone}
+        - Seasonal Theme: ${seasonalTheme || 'None'}
+        - Target Audience: ${targetAudience || 'General'}
         - Campaign Description: ${description}
         
         CUSTOMER DATA INSIGHTS:
@@ -117,11 +125,14 @@ const GenerateContent = () => {
         1. Each variation should be distinctly different in approach and style
         2. Incorporate specific business details and customer insights naturally
         3. Match the ${selectedTone} tone consistently
-        4. Optimize for ${selectedType} format and best practices
+        4. Optimize for ${selectedType} content on ${selectedPlatform} platform
         5. Include compelling calls-to-action
         6. Make each piece feel personalized and data-driven
         7. Use the business location, category, and specific products/services mentioned
         8. Reference customer behavior patterns and segments intelligently
+        9. Incorporate seasonal theme (${seasonalTheme}) if provided
+        10. Target the specific audience (${targetAudience}) if provided
+        11. Create unique, non-repetitive content that feels fresh and engaging
         
         Return ONLY a valid JSON object in this exact format:
         {
@@ -189,12 +200,18 @@ const GenerateContent = () => {
     const newCampaign = {
       id: Date.now().toString(),
       name: campaignName,
+      title: content.title,
+      content: content.content,
+      platform: selectedPlatform,
       type: selectedType,
       tone: selectedTone,
+      seasonalTheme,
+      targetAudience,
       description,
-      content,
+      cta: content.cta,
       createdAt: new Date().toISOString(),
-      status: 'draft'
+      status: 'scheduled',
+      date: new Date()
     };
     
     campaigns.push(newCampaign);
@@ -260,15 +277,59 @@ const GenerateContent = () => {
                     <SelectItem value="social">
                       <div className="flex items-center gap-2">
                         <Share2 className="w-4 h-4" />
-                        Social Media
+                        Social Media Post
                       </div>
                     </SelectItem>
-                    <SelectItem value="sms">
+                    <SelectItem value="blog">
                       <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4" />
-                        SMS Marketing
+                        <BarChart3 className="w-4 h-4" />
+                        Blog Post
                       </div>
                     </SelectItem>
+                    <SelectItem value="ad">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4" />
+                        Advertisement
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="newsletter">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        Newsletter
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Platform</Label>
+                <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="facebook">
+                      <div className="flex items-center gap-2">
+                        <Facebook className="w-4 h-4" />
+                        Facebook
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="instagram">
+                      <div className="flex items-center gap-2">
+                        <Instagram className="w-4 h-4" />
+                        Instagram
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="twitter">
+                      <div className="flex items-center gap-2">
+                        <Twitter className="w-4 h-4" />
+                        Twitter/X
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="website">Website</SelectItem>
+                    <SelectItem value="print">Print Media</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -285,8 +346,38 @@ const GenerateContent = () => {
                     <SelectItem value="playful">Playful & Fun</SelectItem>
                     <SelectItem value="urgent">Urgent & Persuasive</SelectItem>
                     <SelectItem value="sophisticated">Sophisticated</SelectItem>
+                    <SelectItem value="inspiring">Inspiring & Motivational</SelectItem>
+                    <SelectItem value="conversational">Conversational</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Seasonal Theme (Optional)</Label>
+                <Select value={seasonalTheme} onValueChange={setSeasonalTheme}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select seasonal theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="spring">Spring</SelectItem>
+                    <SelectItem value="summer">Summer</SelectItem>
+                    <SelectItem value="fall">Fall/Autumn</SelectItem>
+                    <SelectItem value="winter">Winter</SelectItem>
+                    <SelectItem value="holiday">Holiday Season</SelectItem>
+                    <SelectItem value="back-to-school">Back to School</SelectItem>
+                    <SelectItem value="new-year">New Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Target Audience (Optional)</Label>
+                <Input
+                  placeholder="e.g., Young professionals, Local families, Coffee enthusiasts"
+                  value={targetAudience}
+                  onChange={(e) => setTargetAudience(e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -301,7 +392,7 @@ const GenerateContent = () => {
 
               <Button 
                 onClick={generateContent}
-                disabled={isGenerating || !campaignName || !selectedType || !selectedTone || !description}
+                disabled={isGenerating || !campaignName || !selectedType || !selectedPlatform || !selectedTone || !description}
                 className="w-full"
               >
                 {isGenerating ? (

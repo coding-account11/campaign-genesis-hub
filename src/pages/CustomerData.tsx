@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -63,42 +63,15 @@ const CustomerData = () => {
     segment: "new"
   });
 
-  // Mock customer data - make it mutable so we can add new customers
-  const [customers, setCustomers] = useState<Customer[]>([
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      email: "sarahjohnson55@gmail.com",
-      phone: "555-0123",
-      purchaseHistory: "Regular coffee orders, loves seasonal lattes",
-      segment: "new",
-      segmentReason: "Recent first-time customer with positive engagement",
-      totalSpent: 87.50,
-      lastPurchaseDate: "2024-01-15"
-    },
-    {
-      id: "2", 
-      name: "Emma Davis",
-      email: "emma.davis@email.com",
-      phone: "555-0789",
-      purchaseHistory: "Weekend brunch regular, pastry enthusiast",
-      segment: "returning",
-      segmentReason: "Consistent weekly visits, moderate spending pattern",
-      totalSpent: 245.75,
-      lastPurchaseDate: "2024-01-12"
-    },
-    {
-      id: "3",
-      name: "Mike Chen", 
-      email: "mike.chen@email.com",
-      phone: "555-0456",
-      purchaseHistory: "Large catering orders for office events",
-      segment: "vip",
-      segmentReason: "High-value customer with premium spending habits",
-      totalSpent: 1250.00,
-      lastPurchaseDate: "2024-01-18"
+  // Load customers from localStorage or use default data
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    const saved = localStorage.getItem('customerData');
+    if (saved) {
+      return JSON.parse(saved);
     }
-  ]);
+    // Only return dummy data if no saved data exists
+    return [];
+  });
 
   const segments = [
     { value: "new", label: "New Customer", description: "Recently acquired customer", color: "bg-blue-100 text-blue-800" },
@@ -113,6 +86,27 @@ const CustomerData = () => {
 
   const getSegmentInfo = (segmentValue: string) => {
     return segments.find(s => s.value === segmentValue) || segments[0];
+  };
+
+  const calculateSmartSpending = (customerData: any) => {
+    // Get business profile for pricing information
+    const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
+    const businessPrices = businessProfile.productsServices || '';
+    
+    // Extract prices from business profile
+    const priceMatches = businessPrices.match(/\$[\d,]+(\.\d{2})?/g);
+    const prices = priceMatches ? priceMatches.map((p: string) => parseFloat(p.replace(/[$,]/g, ''))) : [5, 10, 15, 25];
+    const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+    
+    // Calculate spending based on segment and purchase history
+    let multiplier = 1;
+    if (customerData.segment === 'vip') multiplier = 3;
+    else if (customerData.segment === 'returning') multiplier = 1.5;
+    else if (customerData.segment === 'high-spender') multiplier = 2.5;
+    else if (customerData.segment === 'inactive') multiplier = 0.3;
+    
+    const purchaseFrequency = Math.floor(Math.random() * 10) + 1;
+    return Math.round(avgPrice * purchaseFrequency * multiplier);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,15 +185,18 @@ const CustomerData = () => {
           if (jsonMatch) {
             const parsedResponse = JSON.parse(jsonMatch[0]);
             
-            // Add unique IDs to customers
+            // Add unique IDs to customers and calculate smart spending
             const newCustomers: Customer[] = parsedResponse.customers.map((customer: any, index: number) => ({
               ...customer,
               id: `ai-${Date.now()}-${index}`,
-              totalSpent: Number(customer.totalSpent) || 0
+              totalSpent: customer.totalSpent || calculateSmartSpending(customer)
             }));
             
-            // Add all parsed customers
-            setCustomers(prevCustomers => [...prevCustomers, ...newCustomers]);
+            // Clear dummy customers and add all parsed customers
+            setCustomers(newCustomers);
+            
+            // Persist to localStorage
+            localStorage.setItem('customerData', JSON.stringify(newCustomers));
             
             toast({
               title: `Successfully imported ${newCustomers.length} customers!`,
@@ -222,7 +219,8 @@ const CustomerData = () => {
             const parts = line.split(',').map(part => part.trim().replace(/"/g, ''));
             if (parts.length >= 2) {
               const randomSegment = segments[Math.floor(Math.random() * segments.length)];
-              const randomSpent = Math.floor(Math.random() * 2000) + 50;
+              const customerData = { segment: randomSegment };
+              const smartSpent = calculateSmartSpending(customerData);
               
               newCustomers.push({
                 id: `upload-${Date.now()}-${index}`,
@@ -232,13 +230,17 @@ const CustomerData = () => {
                 purchaseHistory: parts[3] || "Various purchases, loyal customer",
                 segment: randomSegment,
                 segmentReason: `Fallback segmentation - please check Gemini API key`,
-                totalSpent: randomSpent,
+                totalSpent: smartSpent,
                 lastPurchaseDate: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
               });
             }
           });
           
-          setCustomers(prevCustomers => [...prevCustomers, ...newCustomers]);
+          // Clear dummy customers and add all parsed customers
+          setCustomers(newCustomers);
+          
+          // Persist to localStorage
+          localStorage.setItem('customerData', JSON.stringify(newCustomers));
           
           toast({
             title: `Imported ${newCustomers.length} customers with basic processing`,
@@ -321,6 +323,13 @@ const CustomerData = () => {
     });
     setShowAddDialog(true);
   };
+
+  // Persist customer data to localStorage whenever customers change
+  useEffect(() => {
+    if (customers.length > 0) {
+      localStorage.setItem('customerData', JSON.stringify(customers));
+    }
+  }, [customers]);
 
   return (
     <div className="space-y-6">

@@ -149,10 +149,22 @@ const MarketingCalendar = () => {
 
   const handleCampaignSelect = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
+    // Auto scroll to bottom to show campaign details
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 100);
   };
 
   const handleDeleteCampaign = () => {
     if (selectedCampaign) {
+      // Remove campaign from state
+      setCampaigns(prev => prev.filter(campaign => campaign.id !== selectedCampaign.id));
+      
+      // Remove from localStorage
+      const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+      const updatedCampaigns = savedCampaigns.filter((campaign: any) => campaign.id !== selectedCampaign.id);
+      localStorage.setItem('campaigns', JSON.stringify(updatedCampaigns));
+      
       toast({
         title: "Campaign deleted",
         description: `"${selectedCampaign.title}" has been removed from your calendar.`

@@ -74,7 +74,7 @@ export function AppSidebar() {
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
       ? "bg-primary text-primary-foreground font-medium" 
-      : "text-card-foreground hover:bg-accent hover:text-accent-foreground";
+      : "text-foreground hover:bg-accent hover:text-accent-foreground";
 
   return (
     <Sidebar
@@ -88,7 +88,7 @@ export function AppSidebar() {
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="font-bold text-lg text-card-foreground">PromoPal</h1>
+              <h1 className="font-bold text-lg text-foreground">PromoPal</h1>
               <p className="text-xs text-muted-foreground">AI Marketing Assistant</p>
             </div>
           )}
