@@ -142,7 +142,7 @@ const GenerateContent = () => {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       // Get business profile and customer data
       const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
