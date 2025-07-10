@@ -130,7 +130,7 @@ const CustomerData = () => {
         localStorage.getItem('gemini_api_key') || 'your-api-key-here'
       );
       
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const reader = new FileReader();
       reader.onload = async (e) => {
