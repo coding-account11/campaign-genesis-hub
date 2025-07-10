@@ -49,6 +49,9 @@ const BusinessProfile = () => {
   };
 
   const handleSave = () => {
+    // Save business profile to localStorage
+    localStorage.setItem('businessProfile', JSON.stringify(formData));
+    
     toast({
       title: "Profile updated successfully",
       description: "Your business profile has been saved."
