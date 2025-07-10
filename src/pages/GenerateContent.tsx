@@ -7,23 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { 
   Sparkles, 
   Copy, 
-  Download, 
   Save,
-  MessageSquare,
-  Mail,
-  Share2,
-  Target,
   Users,
-  Calendar,
-  TrendingUp,
-  BarChart3,
-  Instagram,
-  Facebook,
-  Twitter
+  Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -37,19 +28,21 @@ interface ContentVariation {
 
 const GenerateContent = () => {
   const { toast } = useToast();
-  const [campaignName, setCampaignName] = useState("");
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState("");
-  const [selectedTone, setSelectedTone] = useState("");
+  const [campaignType, setCampaignType] = useState("personalized");
+  const [platformType, setPlatformType] = useState("direct");
+  const [targetAudience, setTargetAudience] = useState("keyword");
+  const [targetKeyword, setTargetKeyword] = useState("");
+  const [selectedSegment, setSelectedSegment] = useState("");
+  const [callToActionGoal, setCallToActionGoal] = useState("");
   const [seasonalTheme, setSeasonalTheme] = useState("");
-  const [targetAudience, setTargetAudience] = useState("");
-  const [description, setDescription] = useState("");
+  const [focusKeywords, setFocusKeywords] = useState("");
+  const [additionalInstructions, setAdditionalInstructions] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<ContentVariation[]>([]);
   const [personalizedCount, setPersonalizedCount] = useState(0);
 
   const generateContent = async () => {
-    if (!campaignName || !selectedType || !selectedPlatform || !selectedTone || !description) {
+    if (!callToActionGoal || !additionalInstructions) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields before generating content.",
@@ -62,31 +55,33 @@ const GenerateContent = () => {
     
     try {
       // Initialize Gemini AI
-      const genAI = new GoogleGenerativeAI(
-        localStorage.getItem('gemini_api_key') || 'your-api-key-here'
-      );
-      
+      const apiKey = localStorage.getItem('gemini_api_key');
+      if (!apiKey) {
+        toast({
+          title: "API Key Required",
+          description: "Please enter your Google Gemini API key first.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
       
       // Get business profile and customer data
       const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
       const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
       
-      // Store updated customer data
-      localStorage.setItem('customerData', JSON.stringify(customerData));
-      
       // Calculate personalized marketing reach
       let personalizedCount = 0;
-      if (selectedType === "email") {
-        personalizedCount = customerData.filter((customer: any) => 
-          customer.email && customer.email.includes('@')
-        ).length;
-      } else if (selectedType === "social") {
-        personalizedCount = Math.floor(customerData.length * 0.8);
-      } else if (selectedType === "sms") {
-        personalizedCount = customerData.filter((customer: any) => 
-          customer.phone && customer.phone.length > 0
-        ).length;
+      if (campaignType === "personalized") {
+        if (platformType === "direct") {
+          personalizedCount = customerData.filter((customer: any) => 
+            customer.email && customer.email.includes('@')
+          ).length;
+        } else {
+          personalizedCount = Math.floor(customerData.length * 0.8);
+        }
       }
       
       // Analyze customer segments
@@ -94,10 +89,22 @@ const GenerateContent = () => {
         acc[customer.segment] = (acc[customer.segment] || 0) + 1;
         return acc;
       }, {});
+
+      // Filter customers based on targeting
+      let targetedCustomers = customerData;
+      if (targetAudience === "keyword" && targetKeyword) {
+        targetedCustomers = customerData.filter((customer: any) => 
+          customer.purchaseHistory?.toLowerCase().includes(targetKeyword.toLowerCase())
+        );
+      } else if (targetAudience === "segment" && selectedSegment) {
+        targetedCustomers = customerData.filter((customer: any) => 
+          customer.segment === selectedSegment
+        );
+      }
       
       // Create comprehensive prompt for Gemini
       const prompt = `
-        Create 3 unique and creative marketing content variations for a ${selectedType} campaign with the following details:
+        Create 3 unique and highly creative marketing content variations based on the following comprehensive campaign setup:
         
         BUSINESS PROFILE:
         - Business Name: ${businessProfile.businessName || 'N/A'}
@@ -107,32 +114,35 @@ const GenerateContent = () => {
         - Business Bio: ${businessProfile.businessBio || 'N/A'}
         - Products/Services: ${businessProfile.productsServices || 'N/A'}
         
-        CAMPAIGN DETAILS:
-        - Campaign Name: ${campaignName}
-        - Content Type: ${selectedType}
-        - Platform: ${selectedPlatform}
-        - Tone: ${selectedTone}
+        CAMPAIGN CONFIGURATION:
+        - Campaign Type: ${campaignType === "personalized" ? "Personalized Marketing - Targeted content for specific customers" : "General Marketing - Broad content for all audiences"}
+        - Platform Type: ${platformType === "direct" ? "Direct to Customer (Email/SMS)" : 
+          platformType === "social" ? "Social Media Post (Facebook, Instagram, Twitter)" :
+          platformType === "email" ? "Email Campaign (Newsletter/Promotional)" :
+          platformType === "local" ? "Local Advertisement (Google Ads, local listings)" : "General Marketing"}
+        - Target Audience Strategy: ${targetAudience === "keyword" ? `Target by Keywords in Purchase History: "${targetKeyword}"` : `Target by Customer Segment: "${selectedSegment}"`}
+        - Call-to-Action Goal: ${callToActionGoal}
         - Seasonal Theme: ${seasonalTheme || 'None'}
-        - Target Audience: ${targetAudience || 'General'}
-        - Campaign Description: ${description}
+        - Focus Keywords: ${focusKeywords || 'None specified'}
+        - Additional Instructions: ${additionalInstructions}
         
         CUSTOMER DATA INSIGHTS:
         - Total Customers: ${customerData.length}
         - Customer Segments: ${JSON.stringify(customerSegments)}
-        - Sample Customer Profiles: ${JSON.stringify(customerData.slice(0, 3))}
+        - Targeted Customer Count: ${targetedCustomers.length}
+        - Sample Targeted Profiles: ${JSON.stringify(targetedCustomers.slice(0, 3))}
         
-        REQUIREMENTS:
-        1. Each variation should be distinctly different in approach and style
-        2. Incorporate specific business details and customer insights naturally
-        3. Match the ${selectedTone} tone consistently
-        4. Optimize for ${selectedType} content on ${selectedPlatform} platform
-        5. Include compelling calls-to-action
-        6. Make each piece feel personalized and data-driven
-        7. Use the business location, category, and specific products/services mentioned
-        8. Reference customer behavior patterns and segments intelligently
-        9. Incorporate seasonal theme (${seasonalTheme}) if provided
-        10. Target the specific audience (${targetAudience}) if provided
-        11. Create unique, non-repetitive content that feels fresh and engaging
+        ADVANCED REQUIREMENTS:
+        1. Each variation should be distinctly different in approach, tone, and creative execution
+        2. Leverage the specific business details and customer insights intelligently
+        3. Optimize content for the selected platform type and delivery method
+        4. Incorporate the call-to-action goal naturally and persuasively
+        5. Use focus keywords strategically throughout the content
+        6. Apply seasonal theme if specified to enhance relevance
+        7. Follow the additional instructions precisely while maintaining creativity
+        8. Ensure each piece feels genuinely personalized based on customer data
+        9. Create compelling, action-oriented content that drives engagement
+        10. Make the content feel fresh, unique, and professionally crafted
         
         Return ONLY a valid JSON object in this exact format:
         {
@@ -169,7 +179,7 @@ const GenerateContent = () => {
         
         toast({
           title: "AI Content Generated Successfully!",
-          description: `Created ${parsedResponse.variations.length} unique variations using Gemini AI with your business data.`
+          description: `Created ${parsedResponse.variations.length} unique variations using advanced targeting and business intelligence.`
         });
       } else {
         throw new Error('Invalid response format from AI');
@@ -199,15 +209,12 @@ const GenerateContent = () => {
     const campaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
     const newCampaign = {
       id: Date.now().toString(),
-      name: campaignName,
+      name: `${campaignType === "personalized" ? "Personalized" : "General"} Campaign`,
       title: content.title,
       content: content.content,
-      platform: selectedPlatform,
-      type: selectedType,
-      tone: selectedTone,
-      seasonalTheme,
-      targetAudience,
-      description,
+      platform: platformType,
+      type: campaignType,
+      targetAudience: targetAudience === "keyword" ? targetKeyword : selectedSegment,
       cta: content.cta,
       createdAt: new Date().toISOString(),
       status: 'scheduled',
@@ -219,9 +226,13 @@ const GenerateContent = () => {
     
     toast({
       title: "Campaign Saved",
-      description: `${campaignName} has been saved to your campaigns.`
+      description: "Campaign has been saved to your marketing calendar."
     });
   };
+
+  // Get customer segments for targeting
+  const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
+  const segments = [...new Set(customerData.map((c: any) => c.segment))].filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
@@ -232,7 +243,7 @@ const GenerateContent = () => {
             AI Content Generation
           </h1>
           <p className="text-muted-foreground mt-2">
-            Create personalized marketing content using Google Gemini AI that understands your business and customers.
+            Create compelling marketing content powered by AI. Choose your campaign type and let our AI craft personalized content using your complete business profile and customer insights.
           </p>
         </div>
       </div>
@@ -244,119 +255,142 @@ const GenerateContent = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-brand-teal" />
-                Campaign Setup
+                <Zap className="w-5 h-5 text-brand-teal" />
+                Content Settings
               </CardTitle>
               <CardDescription>
                 Configure your AI-powered marketing campaign
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>Campaign Name</Label>
-                <Input
-                  placeholder="e.g., Summer Sale 2024"
-                  value={campaignName}
-                  onChange={(e) => setCampaignName(e.target.value)}
-                />
+              {/* Campaign Type */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Campaign Type</Label>
+                <RadioGroup value={campaignType} onValueChange={setCampaignType}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="general" id="general" />
+                    <Label htmlFor="general" className="flex items-center gap-2">
+                      <span className="text-sm">General Marketing</span>
+                      <Badge variant="outline" className="text-xs">AI Powered</Badge>
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-6">Broad content for all audiences</p>
+                  
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="personalized" id="personalized" />
+                    <Label htmlFor="personalized" className="flex items-center gap-2">
+                      <span className="text-sm">Personalized Marketing</span>
+                      <Badge variant="outline" className="text-xs">AI Powered</Badge>
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-6">Targeted content for specific customers</p>
+                </RadioGroup>
               </div>
 
+              <Separator />
+
+              {/* Platform Type */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Platform Type</Label>
+                <RadioGroup value={platformType} onValueChange={setPlatformType}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="direct" id="direct" />
+                    <Label htmlFor="direct" className="text-sm">Direct to Customer</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-6">Personalized Email or Text Messages</p>
+                  
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="social" id="social" />
+                    <Label htmlFor="social" className="text-sm">Social Media Post</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-6">Facebook, Instagram, Twitter, etc.</p>
+                  
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="email" id="email" />
+                    <Label htmlFor="email" className="text-sm">Email Campaign</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-6">Newsletter or promotional email</p>
+                  
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="local" id="local" />
+                    <Label htmlFor="local" className="text-sm">Local Advertisement</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-6">Google Ads, local listings, print media</p>
+                </RadioGroup>
+              </div>
+
+              <Separator />
+
+              {/* Target Audience */}
+              {campaignType === "personalized" && (
+                <>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Target Audience</Label>
+                    <RadioGroup value={targetAudience} onValueChange={setTargetAudience}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="keyword" id="keyword" />
+                        <Label htmlFor="keyword" className="text-sm">Target by Keyword in Purchase History</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="segment" id="segment" />
+                        <Label htmlFor="segment" className="text-sm">Target by Segment</Label>
+                      </div>
+                    </RadioGroup>
+                    
+                    {targetAudience === "keyword" && (
+                      <Input
+                        placeholder="e.g., coffee, new shoes, VIP"
+                        value={targetKeyword}
+                        onChange={(e) => setTargetKeyword(e.target.value)}
+                        className="mt-2"
+                      />
+                    )}
+                    
+                    {targetAudience === "segment" && (
+                      <Select value={selectedSegment} onValueChange={setSelectedSegment}>
+                        <SelectTrigger className="mt-2">
+                          <SelectValue placeholder="Select a segment to target" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {segments.map((segment) => (
+                            <SelectItem key={segment} value={segment}>
+                              {segment}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                  <Separator />
+                </>
+              )}
+
+              {/* Call-to-Action Goal */}
               <div className="space-y-2">
-                <Label>Content Type</Label>
-                <Select value={selectedType} onValueChange={setSelectedType}>
+                <Label>Call-to-Action Goal (Optional)</Label>
+                <Select value={callToActionGoal} onValueChange={setCallToActionGoal}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose content type" />
+                    <SelectValue placeholder="Choose a campaign goal" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="email">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Email Marketing
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="social">
-                      <div className="flex items-center gap-2">
-                        <Share2 className="w-4 h-4" />
-                        Social Media Post
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="blog">
-                      <div className="flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4" />
-                        Blog Post
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="ad">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4" />
-                        Advertisement
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="newsletter">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Newsletter
-                      </div>
-                    </SelectItem>
+                    <SelectItem value="visit_store">Visit Store/Location</SelectItem>
+                    <SelectItem value="make_purchase">Make a Purchase</SelectItem>
+                    <SelectItem value="sign_up">Sign Up/Register</SelectItem>
+                    <SelectItem value="download_app">Download App</SelectItem>
+                    <SelectItem value="book_appointment">Book Appointment</SelectItem>
+                    <SelectItem value="request_quote">Request Quote</SelectItem>
+                    <SelectItem value="follow_social">Follow Social Media</SelectItem>
+                    <SelectItem value="join_loyalty">Join Loyalty Program</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Platform</Label>
-                <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select platform" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="facebook">
-                      <div className="flex items-center gap-2">
-                        <Facebook className="w-4 h-4" />
-                        Facebook
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="instagram">
-                      <div className="flex items-center gap-2">
-                        <Instagram className="w-4 h-4" />
-                        Instagram
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="twitter">
-                      <div className="flex items-center gap-2">
-                        <Twitter className="w-4 h-4" />
-                        Twitter/X
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="print">Print Media</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tone & Style</Label>
-                <Select value={selectedTone} onValueChange={setSelectedTone}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select tone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="friendly">Friendly & Casual</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="playful">Playful & Fun</SelectItem>
-                    <SelectItem value="urgent">Urgent & Persuasive</SelectItem>
-                    <SelectItem value="sophisticated">Sophisticated</SelectItem>
-                    <SelectItem value="inspiring">Inspiring & Motivational</SelectItem>
-                    <SelectItem value="conversational">Conversational</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
+              {/* Seasonal Theme */}
               <div className="space-y-2">
                 <Label>Seasonal Theme (Optional)</Label>
                 <Select value={seasonalTheme} onValueChange={setSeasonalTheme}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select seasonal theme" />
+                    <SelectValue placeholder="Choose a seasonal theme" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
@@ -371,34 +405,39 @@ const GenerateContent = () => {
                 </Select>
               </div>
 
+              {/* Focus Keywords */}
               <div className="space-y-2">
-                <Label>Target Audience (Optional)</Label>
+                <Label>Focus Keywords (Optional)</Label>
                 <Input
-                  placeholder="e.g., Young professionals, Local families, Coffee enthusiasts"
-                  value={targetAudience}
-                  onChange={(e) => setTargetAudience(e.target.value)}
+                  placeholder="sale, discount, limited time, etc."
+                  value={focusKeywords}
+                  onChange={(e) => setFocusKeywords(e.target.value)}
                 />
               </div>
 
+              {/* Additional Content & Instructions */}
               <div className="space-y-2">
-                <Label>Campaign Description</Label>
+                <Label>Additional Content & Instructions</Label>
                 <Textarea
-                  placeholder="Describe your campaign goals, offers, or key messages..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Provide any specific details, desired content length, tone adjustments, special offers, or other context that will help the AI create better content for your campaign..."
+                  value={additionalInstructions}
+                  onChange={(e) => setAdditionalInstructions(e.target.value)}
                   rows={4}
                 />
+                <p className="text-xs text-muted-foreground">
+                  The AI will incorporate all this additional context along with your business profile and customer data to create highly personalized content.
+                </p>
               </div>
 
               <Button 
                 onClick={generateContent}
-                disabled={isGenerating || !campaignName || !selectedType || !selectedPlatform || !selectedTone || !description}
+                disabled={isGenerating || !callToActionGoal || !additionalInstructions}
                 className="w-full"
               >
                 {isGenerating ? (
                   <>
                     <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                    Generating with AI...
+                    Generating AI Content...
                   </>
                 ) : (
                   <>
@@ -430,7 +469,7 @@ const GenerateContent = () => {
                   AI-Generated Content Variations
                 </CardTitle>
                 <CardDescription>
-                  3 unique variations created using your business profile and customer data
+                  3 unique variations created using advanced AI with your business intelligence
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -492,7 +531,7 @@ const GenerateContent = () => {
                 <Sparkles className="w-12 h-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">Ready to Generate Content</h3>
                 <p className="text-muted-foreground">
-                  Fill in the campaign details and click "Generate AI Content" to create personalized marketing content using Gemini AI.
+                  Configure your content settings and click "Generate AI Content" to create personalized marketing content using advanced AI with your business intelligence.
                 </p>
               </CardContent>
             </Card>
