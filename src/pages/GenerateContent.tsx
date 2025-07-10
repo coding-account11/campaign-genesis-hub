@@ -261,13 +261,23 @@ const GenerateContent = () => {
         throw new Error('Invalid response format from AI');
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating content:', error);
-      toast({
-        title: "Content Generation Failed",
-        description: "Please check your Gemini API key and try again.",
-        variant: "destructive"
-      });
+      
+      // Check if it's a quota error
+      if (error.status === 429 || error.message?.includes('quota')) {
+        toast({
+          title: "Quota Limit Reached",
+          description: "You've exceeded your Gemini API quota. Please wait or upgrade your plan.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Content Generation Failed",
+          description: "Please check your Gemini API key and try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
