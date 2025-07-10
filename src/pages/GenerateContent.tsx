@@ -359,7 +359,7 @@ const GenerateContent = () => {
                     <SelectValue placeholder="Select seasonal theme" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     <SelectItem value="spring">Spring</SelectItem>
                     <SelectItem value="summer">Summer</SelectItem>
                     <SelectItem value="fall">Fall/Autumn</SelectItem>
