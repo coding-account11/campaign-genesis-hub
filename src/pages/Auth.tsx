@@ -79,16 +79,7 @@ const Auth = () => {
     return true;
   };
 
-  const handleSignUp = async () => {
-    if (!formData.email) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter your email address.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleSignUp = () => {
     navigate('/dashboard');
   };
 
