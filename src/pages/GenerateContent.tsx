@@ -14,13 +14,12 @@ import {
   Copy, 
   Save,
   Users,
-  Zap,
-  AlertCircle
+  Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 interface ContentVariation {
   title: string;
@@ -31,7 +30,6 @@ interface ContentVariation {
 const GenerateContent = () => {
   const { toast } = useToast();
   const location = useLocation();
-  const navigate = useNavigate();
   const [campaignType, setCampaignType] = useState("personalized");
   const [platformType, setPlatformType] = useState("direct");
   const [targetAudience, setTargetAudience] = useState("keyword");
@@ -332,58 +330,6 @@ const GenerateContent = () => {
           </p>
         </div>
       </div>
-
-      {/* Warning Messages */}
-      {(() => {
-        const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
-        const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
-        const hasBusinessProfile = businessProfile.businessName;
-        const hasCustomerData = customerData.length > 0;
-
-        if (!hasBusinessProfile) {
-          return (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-destructive mb-2">
-                <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">Business Profile Required</span>
-              </div>
-              <p className="text-sm text-destructive/80 mb-3">
-                Please fill out your business profile to generate personalized content that matches your brand and industry.
-              </p>
-              <Button 
-                size="sm" 
-                variant="destructive"
-                onClick={() => navigate("/dashboard/business-profile")}
-              >
-                Complete Business Profile
-              </Button>
-            </div>
-          );
-        }
-
-        if (campaignType === "personalized" && !hasCustomerData) {
-          return (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-destructive mb-2">
-                <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">Customer Data Required for Personalized Marketing</span>
-              </div>
-              <p className="text-sm text-destructive/80 mb-3">
-                To create personalized marketing campaigns, please upload your customer data first. This enables targeted and effective content generation.
-              </p>
-              <Button 
-                size="sm" 
-                variant="destructive"
-                onClick={() => navigate("/dashboard/customer-data")}
-              >
-                Upload Customer Data
-              </Button>
-            </div>
-          );
-        }
-
-        return null;
-      })()}
 
       <GeminiApiKeyInput />
 

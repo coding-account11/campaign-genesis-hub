@@ -2,11 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Sparkles, Calendar, Users, TrendingUp, Clock, Wand2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Sparkles, Calendar, Users, TrendingUp, Clock, Wand2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { getSuggestionsForBusiness, mapSuggestionToRoute } from "@/utils/suggestions";
 
 interface BusinessProfile {
   business_name: string;
@@ -19,12 +16,6 @@ const Dashboard = () => {
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isNewUser, setIsNewUser] = useState(false);
-  const [checklist, setChecklist] = useState({
-    businessProfile: false,
-    customerData: false,
-    firstContent: false
-  });
 
   // Load dynamic stats from localStorage and customer data
   const [stats, setStats] = useState({
@@ -100,47 +91,18 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Check auth state and load business profile
+  // Simulate loading and checking for business profile
   useEffect(() => {
-    const checkAuthAndLoadProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
-
-      // Check if user has completed profile
-      const savedProfile = localStorage.getItem('businessProfile');
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        setBusinessProfile({
-          business_name: profile.businessName || "Your Business",
-          business_category: profile.businessCategory || "Business",
-          location: profile.location || "Location"
-        });
-      }
-
-      // Check user progress
-      const userProgress = JSON.parse(localStorage.getItem('userProgress') || '{}');
-      const hasBusinessProfile = !!savedProfile && JSON.parse(savedProfile).businessName;
-      const hasCustomerData = JSON.parse(localStorage.getItem('customerData') || '[]').length > 0;
-      const hasGeneratedContent = JSON.parse(localStorage.getItem('campaigns') || '[]').length > 0;
-
-      setChecklist({
-        businessProfile: hasBusinessProfile,
-        customerData: hasCustomerData,
-        firstContent: hasGeneratedContent
+    setTimeout(() => {
+      // Mock business profile - in real app, this would be fetched from backend
+      setBusinessProfile({
+        business_name: "Cozy Corner Cafe",
+        business_category: "Restaurant",
+        location: "Downtown"
       });
-
-      // Check if this is a new user (no business profile set up)
-      setIsNewUser(!hasBusinessProfile);
-      
       setLoading(false);
-    };
-
-    checkAuthAndLoadProfile();
-  }, [navigate]);
+    }, 1000);
+  }, []);
 
   const getTimeGreeting = () => {
     const hour = currentTime.getHours();
@@ -150,20 +112,94 @@ const Dashboard = () => {
   };
 
   const getBusinessSpecificIdeas = () => {
-    const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
-    const businessCategory = businessProfile.businessCategory || 'general';
+    const businessName = businessProfile?.business_name || "your business";
+    const category = businessProfile?.business_category?.toLowerCase() || "business";
     
-    // Use the suggestions system
-    const suggestions = getSuggestionsForBusiness(businessCategory, currentTime);
-    
-    return suggestions.map((suggestion: any) => ({
-      id: suggestion.id,
-      title: suggestion.title,
-      description: suggestion.description,
-      priority: suggestion.priority === 'high' ? 'high priority' : 'medium priority',
-      color: suggestion.priority === 'high' ? 'destructive' : 'secondary',
-      type: suggestion.type
-    }));
+    if (category.includes("restaurant") || category.includes("cafe") || category.includes("food")) {
+      return [
+        {
+          title: "Feature Today's Special Menu",
+          description: `Highlight ${businessName}'s daily specials with mouth-watering descriptions and behind-the-scenes preparation shots.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Share Chef's Secret Recipe Tip",
+          description: `Give customers a peek into ${businessName}'s kitchen secrets - a cooking tip or ingredient spotlight.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Customer's Favorite Dish Story",
+          description: `Feature a regular customer and their go-to order at ${businessName}, making it personal and relatable.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
+    } else if (category.includes("retail") || category.includes("shop")) {
+      return [
+        {
+          title: "New Product Showcase",
+          description: `Introduce ${businessName}'s latest arrivals with styling tips or usage ideas.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Behind-the-Scenes Sourcing",
+          description: `Show how ${businessName} selects quality products and the story behind your curated selection.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Customer Style Feature",
+          description: `Highlight how real customers style or use products from ${businessName}.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
+    } else if (category.includes("service") || category.includes("health") || category.includes("beauty")) {
+      return [
+        {
+          title: "Client Success Transformation",
+          description: `Share a before/after story showcasing ${businessName}'s impact on a client's life or goals.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Expert Tips & Advice",
+          description: `Share professional insights and tips that position ${businessName} as the go-to expert in your field.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Team Member Spotlight",
+          description: `Introduce the skilled professionals at ${businessName} and their unique expertise.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
+    } else {
+      return [
+        {
+          title: "Share a Customer Success Story",
+          description: `Highlight how ${businessName} made a real difference in a customer's experience.`,
+          priority: "high priority",
+          color: "destructive"
+        },
+        {
+          title: "Behind-the-Scenes Content",
+          description: `Give customers a peek into the daily operations and passion behind ${businessName}.`,
+          priority: "medium priority",
+          color: "secondary"
+        },
+        {
+          title: "Community Impact Story",
+          description: `Show how ${businessName} contributes to and supports the local community.`,
+          priority: "medium priority",
+          color: "secondary"
+        }
+      ];
+    }
   };
 
   const contentIdeas = getBusinessSpecificIdeas();
@@ -242,7 +278,7 @@ const Dashboard = () => {
               <p className="text-white/90 mb-4">Ready to create some amazing marketing content? Let's boost your business!</p>
               <Button 
                 variant="secondary"
-                onClick={() => navigate("/dashboard/generate-content")}
+                onClick={() => navigate("/generate-content")}
                 className="bg-white text-primary hover:bg-white/90"
               >
                 Generate Content →
@@ -300,90 +336,6 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Onboarding Checklist for New Users */}
-      {isNewUser && (
-        <Card className="border-l-4 border-l-brand-purple">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-brand-purple" />
-              Welcome to PromoPal! Let's get you started
-            </CardTitle>
-            <CardDescription>
-              Complete these steps to unlock the full power of AI marketing
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Checkbox 
-                  checked={checklist.businessProfile}
-                  disabled
-                  className="border-brand-purple data-[state=checked]:bg-brand-purple"
-                />
-                <Button
-                  variant="ghost"
-                  className="justify-start p-0 h-auto text-left"
-                  onClick={() => navigate("/dashboard/business-profile")}
-                >
-                  <div>
-                    <p className={`font-medium ${checklist.businessProfile ? 'text-muted-foreground line-through' : ''}`}>
-                      Fill out Business Profile for personalized business insights
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Help our AI understand your business better
-                    </p>
-                  </div>
-                </Button>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <Checkbox 
-                  checked={checklist.customerData}
-                  disabled
-                  className="border-brand-purple data-[state=checked]:bg-brand-purple"
-                />
-                <Button
-                  variant="ghost"
-                  className="justify-start p-0 h-auto text-left"
-                  onClick={() => navigate("/dashboard/customer-data")}
-                >
-                  <div>
-                    <p className={`font-medium ${checklist.customerData ? 'text-muted-foreground line-through' : ''}`}>
-                      Add customer data for personalized customer insights
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Upload customer information for targeted campaigns
-                    </p>
-                  </div>
-                </Button>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <Checkbox 
-                  checked={checklist.firstContent}
-                  disabled
-                  className="border-brand-purple data-[state=checked]:bg-brand-purple"
-                />
-                <Button
-                  variant="ghost"
-                  className="justify-start p-0 h-auto text-left"
-                  onClick={() => navigate("/dashboard/generate-content")}
-                >
-                  <div>
-                    <p className={`font-medium ${checklist.firstContent ? 'text-muted-foreground line-through' : ''}`}>
-                      Generate your first content
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Create your first AI-powered marketing campaign
-                    </p>
-                  </div>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Magic Campaign Widget */}
       <Card className="bg-gradient-primary text-white border-0 shadow-elegant">
         <CardContent className="p-6">
@@ -396,7 +348,7 @@ const Dashboard = () => {
               <p className="text-lg mb-4">Surprise me with a campaign I didn't know I needed</p>
               <Button 
                 variant="secondary"
-                onClick={() => navigate("/dashboard/generate-content?magic=true")}
+                onClick={() => navigate("/generate-content?magic=true")}
                 className="bg-white text-primary hover:bg-white/90"
               >
                 Generate Magic Campaign
@@ -429,16 +381,17 @@ const Dashboard = () => {
                   key={index}
                   className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                   onClick={() => {
-                    // Find the original suggestion to use for mapping
-                    const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
-                    const businessCategory = businessProfile.businessCategory || 'general';
-                    const suggestions = getSuggestionsForBusiness(businessCategory, currentTime);
-                    const originalSuggestion = suggestions.find(s => s.id === idea.id);
-                    
-                    if (originalSuggestion) {
-                      const suggestionType = mapSuggestionToRoute(originalSuggestion);
-                      navigate(`/dashboard/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(idea.title)}&description=${encodeURIComponent(idea.description)}&type=${idea.type}`);
+                    // Map suggestions to URL parameters for auto-population
+                    let suggestionType = 'general';
+                    if (idea.title.toLowerCase().includes('special') || idea.title.toLowerCase().includes('menu')) {
+                      suggestionType = 'seasonal-promo';
+                    } else if (idea.title.toLowerCase().includes('customer') || idea.title.toLowerCase().includes('story')) {
+                      suggestionType = 'personalized-email';
+                    } else if (idea.title.toLowerCase().includes('community') || idea.title.toLowerCase().includes('local')) {
+                      suggestionType = 'local-event';
                     }
+                    
+                    navigate(`/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(idea.title)}&description=${encodeURIComponent(idea.description)}`);
                   }}
                 >
                   <div className="flex-1">
@@ -466,7 +419,7 @@ const Dashboard = () => {
                   className="text-brand-purple hover:underline"
                   onClick={(e) => {
                     e.preventDefault();
-                    navigate("/dashboard/marketing-calendar");
+                    navigate("/marketing-calendar");
                   }}
                 >
                   View All →
@@ -480,7 +433,7 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground mb-4">Start planning your marketing content to see campaigns here.</p>
                 <Button 
                   variant="outline"
-                onClick={() => navigate("/dashboard/generate-content")}
+                  onClick={() => navigate("/generate-content")}
                 >
                   Create Campaign
                 </Button>
@@ -500,7 +453,7 @@ const Dashboard = () => {
               <Button 
                 variant="outline" 
                 className="w-full justify-start gap-3"
-                onClick={() => navigate("/dashboard/generate-content")}
+                onClick={() => navigate("/generate-content")}
               >
                 <Sparkles className="w-4 h-4 text-brand-purple" />
                 <div className="text-left">
@@ -512,7 +465,7 @@ const Dashboard = () => {
               <Button 
                 variant="outline" 
                 className="w-full justify-start gap-3"
-                onClick={() => navigate("/dashboard/marketing-calendar")}
+                onClick={() => navigate("/marketing-calendar")}
               >
                 <Calendar className="w-4 h-4 text-brand-teal" />
                 <div className="text-left">
@@ -524,7 +477,7 @@ const Dashboard = () => {
               <Button 
                 variant="outline" 
                 className="w-full justify-start gap-3"
-                onClick={() => navigate("/dashboard/customer-data")}
+                onClick={() => navigate("/customer-data")}
               >
                 <Users className="w-4 h-4 text-brand-purple" />
                 <div className="text-left">
