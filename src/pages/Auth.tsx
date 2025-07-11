@@ -33,7 +33,24 @@ const Auth = () => {
     
     try {
       if (isSignUp) {
-        // Save user data to Supabase
+        // Check if user already exists
+        const { data: existingUser } = await supabase
+          .from('user_profiles')
+          .select('email')
+          .eq('email', formData.email)
+          .single();
+
+        if (existingUser) {
+          toast({
+            title: "Account already exists",
+            description: "An account with this email already exists. Please sign in instead.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Create new user account
         const { error } = await supabase
           .from('user_profiles')
           .insert({
@@ -43,10 +60,16 @@ const Auth = () => {
           });
 
         if (error) {
-          console.error('Error saving user data:', error);
+          toast({
+            title: "Sign up failed",
+            description: "Unable to create account. Please try again.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
         }
 
-        // Also save to localStorage for immediate use
+        // Save to localStorage for session management
         localStorage.setItem('currentUserEmail', formData.email);
         localStorage.setItem('userData', JSON.stringify({
           email: formData.email,
@@ -54,16 +77,50 @@ const Auth = () => {
           signupDate: new Date().toISOString()
         }));
         
+        toast({
+          title: "Account created successfully",
+          description: "Welcome to PromoPal!"
+        });
+        
         navigate("/contact");
       } else {
-        // For login, just save email and go to dashboard
+        // Login - check if user exists in database
+        const { data: existingUser } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('email', formData.email)
+          .single();
+
+        if (!existingUser) {
+          toast({
+            title: "Account not found",
+            description: "No account found with this email. Please sign up first.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Save to localStorage for session management
         localStorage.setItem('currentUserEmail', formData.email);
+        localStorage.setItem('userData', JSON.stringify({
+          email: existingUser.email,
+          phone: existingUser.phone,
+          signupDate: existingUser.signup_date
+        }));
+        
+        toast({
+          title: "Welcome back!",
+          description: "Successfully signed in."
+        });
+        
         navigate("/dashboard");
       }
     } catch (error) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: isSignUp ? "Failed to create account. Please try again." : "Failed to sign in. Please try again.",
         variant: "destructive"
       });
     } finally {
