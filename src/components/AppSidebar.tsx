@@ -23,44 +23,38 @@ import {
 const navigationItems = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/dashboard",
     icon: LayoutDashboard,
     group: "MARKETING HUB"
   },
   {
     title: "Business Profile",
-    url: "/business-profile",
+    url: "/dashboard/business-profile",
     icon: Building2,
     group: "MARKETING HUB"
   },
   {
     title: "Generate Content",
-    url: "/generate-content",
+    url: "/dashboard/generate-content",
     icon: Sparkles,
     group: "MARKETING HUB"
   },
   {
     title: "Marketing Calendar",
-    url: "/marketing-calendar",
+    url: "/dashboard/marketing-calendar",
     icon: Calendar,
     group: "MARKETING HUB"
   },
   {
     title: "Customer Data",
-    url: "/customer-data",
+    url: "/dashboard/customer-data",
     icon: Users,
     group: "MARKETING HUB"
   },
   {
     title: "Settings",
-    url: "/settings",
+    url: "/dashboard/settings",
     icon: Settings,
-    group: "MARKETING HUB"
-  },
-  {
-    title: "Support",
-    url: "/support",
-    icon: HelpCircle,
     group: "MARKETING HUB"
   }
 ];
@@ -108,7 +102,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink 
                       to={item.url} 
-                      end={item.url === "/"}
+                      end={item.url === "/dashboard"}
                       className={getNavCls}
                     >
                       <item.icon className="w-4 h-4" />
