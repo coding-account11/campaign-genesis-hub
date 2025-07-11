@@ -60,26 +60,6 @@ const Landing = () => {
     "Get real-time performance analytics and insights"
   ];
 
-  const testimonials = [
-    {
-      name: "Sarah Martinez",
-      business: "Bloom Boutique",
-      text: "PromoPal transformed how we connect with customers. Our engagement rates have tripled!",
-      rating: 5
-    },
-    {
-      name: "Mike Chen",
-      business: "Urban Fitness Studio",
-      text: "The AI understands our fitness community perfectly. Every campaign feels personal and relevant.",
-      rating: 5
-    },
-    {
-      name: "Elena Rodriguez",
-      business: "Casa Elena Restaurant",
-      text: "From menu promotions to customer retention, PromoPal handles it all. Incredible results!",
-      rating: 5
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,7 +114,7 @@ const Landing = () => {
                 onClick={() => navigate("/auth")}
                 className="bg-gradient-primary hover:opacity-90 text-white border-0 shadow-elegant text-lg px-8 py-6"
               >
-                Start Your Free Trial
+                Get Started Now
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <Button 
@@ -246,31 +226,57 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Referral Section */}
       <section className="py-20 px-6 bg-muted/30">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold">Loved by Business Owners</h2>
-            <p className="text-xl text-muted-foreground">See what our customers are saying</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-0 shadow-card bg-background/80 backdrop-blur">
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex gap-1">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-brand-purple text-brand-purple" />
-                    ))}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold">
+                Refer Friends & Earn Rewards
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                Love PromoPal? Share it with other business owners and earn account credits for every successful referral.
+              </p>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">1</span>
                   </div>
-                  <p className="text-muted-foreground">"{testimonial.text}"</p>
-                  <div>
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.business}</p>
+                  <span className="text-foreground">Share your unique referral link</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">2</span>
+                  </div>
+                  <span className="text-foreground">Friend signs up and completes onboarding</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">3</span>
+                  </div>
+                  <span className="text-foreground">You both receive $25 in account credits</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <Card className="border-0 shadow-card bg-gradient-primary text-white">
+                <CardContent className="p-8 text-center space-y-4">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold">$25 Credit</h3>
+                  <p className="text-white/90">
+                    For every friend who joins PromoPal through your referral
+                  </p>
+                  <div className="bg-white/20 rounded-lg p-4">
+                    <p className="text-sm text-white/80">Unlimited referrals</p>
+                    <p className="text-sm text-white/80">Credits never expire</p>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -292,11 +298,11 @@ const Landing = () => {
                 onClick={() => navigate("/auth")}
                 className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6"
               >
-                Start Your Free Trial Today
+                Get Started Today
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <p className="text-sm text-white/70">
-                No credit card required • Setup in under 5 minutes
+                Setup in under 5 minutes • Refer friends for rewards
               </p>
             </CardContent>
           </Card>

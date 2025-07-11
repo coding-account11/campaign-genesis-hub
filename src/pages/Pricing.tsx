@@ -208,11 +208,11 @@ const Pricing = () => {
             onClick={handleGetStarted}
             className="bg-gradient-primary hover:opacity-90 text-white border-0 shadow-elegant"
           >
-            Start Your Free Trial
+            Get Started
           </Button>
           
           <p className="text-sm text-muted-foreground">
-            No credit card required • 14-day free trial • Cancel anytime
+            Setup in minutes • Refer friends for $25 credits • Cancel anytime
           </p>
         </div>
       </div>
