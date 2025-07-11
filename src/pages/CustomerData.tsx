@@ -34,8 +34,6 @@ import {
   Sparkles 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
 
 interface Customer {
   id: string;
@@ -120,146 +118,50 @@ const CustomerData = () => {
     if (!uploadFile) return;
     
     toast({
-      title: "Processing file with Gemini AI...",
-      description: "Analyzing customer data and performing intelligent segmentation."
+      title: "Processing file...",
+      description: "Parsing customer data from uploaded file."
     });
 
     try {
-      // Initialize Gemini AI
-      const genAI = new GoogleGenerativeAI(
-        localStorage.getItem('gemini_api_key') || 'your-api-key-here'
-      );
-      
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
       const reader = new FileReader();
       reader.onload = async (e) => {
         const text = e.target?.result as string;
         
-        // Create comprehensive prompt for Gemini to analyze customer data
-        const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
+        // Basic parsing for CSV/TXT files
+        const lines = text.split('\n').filter(line => line.trim());
+        const newCustomers: Customer[] = [];
+        const segments = ["new", "returning", "vip", "inactive", "at-risk", "high-spender", "low-engagement", "upsell"];
         
-        const prompt = `
-          Parse the following customer data file and map it to our customer database structure. Use ALL available business context to make intelligent deductions.
+        lines.forEach((line, index) => {
+          if (index === 0 && line.includes(',')) return; // Skip header row
           
-          BUSINESS CONTEXT:
-          - Business Name: ${businessProfile.businessName || 'N/A'}
-          - Business Category: ${businessProfile.businessCategory || 'N/A'}
-          - Products/Services: ${businessProfile.productsServices || 'N/A'}
-          - Business Description: ${businessProfile.businessBio || 'N/A'}
-          
-          CUSTOMER FILE CONTENT:
-          ${text}
-          
-          INTELLIGENT PROCESSING INSTRUCTIONS:
-          1. Parse all customer records from the file (CSV, TXT, or any format)
-          2. Map columns intelligently - common variations like:
-             - Name: "name", "customer_name", "full_name", "first_name + last_name", "client_name"
-             - Email: "email", "email_address", "e_mail", "contact_email"
-             - Phone: "phone", "phone_number", "contact_number", "mobile", "tel"
-             - Purchase info: "purchase_history", "orders", "transactions", "notes", "comments", "products"
-          3. SMART SPENDING CALCULATION: If purchase history mentions specific items/services:
-             - Cross-reference with business products/services and typical pricing
-             - Use business context to estimate realistic spending amounts
-             - Consider industry standards for the business category
-          4. CONSERVATIVE FALLBACK: For missing or unclear fields, use "N/A" - DO NOT generate fake data
-          5. Segment assignment based on deduced or actual data:
-             - Use spending patterns, purchase frequency, and business context
-             - If data is insufficient: use "new" as default
-          6. For totalSpent: Use intelligent deduction from purchase history + business context, otherwise 0
-          7. For lastPurchaseDate: Use actual dates if present, otherwise "N/A"
-          8. Prioritize accuracy but leverage ALL available context for intelligent deduction
-          
-          Return ONLY a valid JSON object with this structure:
-          {
-            "customers": [
-              {
-                "name": "actual name from data or N/A",
-                "email": "actual email from data or N/A", 
-                "phone": "actual phone from data or N/A",
-                "purchaseHistory": "actual purchase info from data or N/A",
-                "segment": "segment based on deduced or actual data",
-                "segmentReason": "reasoning based on available data and business context",
-                "totalSpent": 0,
-                "lastPurchaseDate": "N/A"
-              }
-            ]
-          }
-        `;
-        
-        try {
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          const aiText = response.text();
-          
-          // Parse the JSON response
-          const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsedResponse = JSON.parse(jsonMatch[0]);
+          const parts = line.split(',').map(part => part.trim().replace(/"/g, ''));
+          if (parts.length >= 2) {
+            const randomSegment = segments[Math.floor(Math.random() * segments.length)];
+            const customerData = { segment: randomSegment };
+            const smartSpent = calculateSmartSpending(customerData);
             
-            // Add unique IDs to customers and calculate smart spending
-            const newCustomers: Customer[] = parsedResponse.customers.map((customer: any, index: number) => ({
-              ...customer,
-              id: `ai-${Date.now()}-${index}`,
-              totalSpent: customer.totalSpent || calculateSmartSpending(customer)
-            }));
-            
-            // Clear dummy customers and add all parsed customers
-            setCustomers(newCustomers);
-            
-            // Persist to localStorage
-            localStorage.setItem('customerData', JSON.stringify(newCustomers));
-            
-            toast({
-              title: `Successfully imported ${newCustomers.length} customers!`,
-              description: "Gemini AI completed intelligent segmentation and data structuring."
+            newCustomers.push({
+              id: `upload-${Date.now()}-${index}`,
+              name: parts[0] || `Customer ${index + 1}`,
+              email: parts[1] || `customer${index + 1}@email.com`,
+              phone: parts[2] || `555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
+              purchaseHistory: parts[3] || "Various purchases, loyal customer",
+              segment: randomSegment,
+              segmentReason: `Automatically assigned based on basic analysis`,
+              totalSpent: smartSpent,
+              lastPurchaseDate: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
             });
-          } else {
-            throw new Error('Invalid AI response format');
           }
-          
-        } catch (aiError) {
-          console.error('AI processing error:', aiError);
-          // Fallback to basic parsing
-          const lines = text.split('\n').filter(line => line.trim());
-          const newCustomers: Customer[] = [];
-          const segments = ["new", "returning", "vip", "inactive", "at-risk", "high-spender", "low-engagement", "upsell"];
-          
-          lines.forEach((line, index) => {
-            if (index === 0 && line.includes(',')) return; // Skip header row
-            
-            const parts = line.split(',').map(part => part.trim().replace(/"/g, ''));
-            if (parts.length >= 2) {
-              const randomSegment = segments[Math.floor(Math.random() * segments.length)];
-              const customerData = { segment: randomSegment };
-              const smartSpent = calculateSmartSpending(customerData);
-              
-              newCustomers.push({
-                id: `upload-${Date.now()}-${index}`,
-                name: parts[0] || `Customer ${index + 1}`,
-                email: parts[1] || `customer${index + 1}@email.com`,
-                phone: parts[2] || `555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
-                purchaseHistory: parts[3] || "Various purchases, loyal customer",
-                segment: randomSegment,
-                segmentReason: `Fallback segmentation - please check Gemini API key`,
-                totalSpent: smartSpent,
-                lastPurchaseDate: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-              });
-            }
-          });
-          
-          // Clear dummy customers and add all parsed customers
-          setCustomers(newCustomers);
-          
-          // Persist to localStorage
-          localStorage.setItem('customerData', JSON.stringify(newCustomers));
-          
-          toast({
-            title: `Imported ${newCustomers.length} customers with basic processing`,
-            description: "AI processing failed, used fallback parsing. Please check your Gemini API key.",
-            variant: "destructive"
-          });
-        }
+        });
+        
+        setCustomers(newCustomers);
+        localStorage.setItem('customerData', JSON.stringify(newCustomers));
+        
+        toast({
+          title: `Successfully imported ${newCustomers.length} customers!`,
+          description: "Customer data has been processed and segmented."
+        });
         
         setUploadFile(null);
       };
@@ -270,7 +172,7 @@ const CustomerData = () => {
       console.error('Error processing upload:', error);
       toast({
         title: "Upload Processing Failed",
-        description: "Please check your file format and Gemini API key.",
+        description: "Please check your file format and try again.",
         variant: "destructive"
       });
       setUploadFile(null);
@@ -357,7 +259,7 @@ const CustomerData = () => {
         </div>
       </div>
 
-      <GeminiApiKeyInput />
+      
 
       <Tabs defaultValue="upload" className="w-full">
         <TabsList className="grid w-full grid-cols-3">

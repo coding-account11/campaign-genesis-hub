@@ -19,9 +19,8 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
 import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentVariation {
   title: string;
@@ -157,42 +156,10 @@ const GenerateContent = () => {
     setIsGenerating(true);
     
     try {
-      // Initialize Gemini AI
-      const apiKey = localStorage.getItem('gemini_api_key');
-      if (!apiKey) {
-        toast({
-          title: "API Key Required",
-          description: "Please enter your Google Gemini API key first.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
       // Get business profile and customer data
       const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
       const customerData = JSON.parse(localStorage.getItem('customerData') || '[]');
       
-      // Calculate personalized marketing reach
-      let personalizedCount = 0;
-      if (campaignType === "personalized") {
-        if (platformType === "direct") {
-          personalizedCount = customerData.filter((customer: any) => 
-            customer.email && customer.email.includes('@')
-          ).length;
-        } else {
-          personalizedCount = Math.floor(customerData.length * 0.8);
-        }
-      }
-      
-      // Analyze customer segments
-      const customerSegments = customerData.reduce((acc: any, customer: any) => {
-        acc[customer.segment] = (acc[customer.segment] || 0) + 1;
-        return acc;
-      }, {});
-
       // Filter customers based on targeting
       let targetedCustomers = customerData;
       if (targetAudience === "keyword" && targetKeyword) {
@@ -205,106 +172,60 @@ const GenerateContent = () => {
         );
       }
       
-      // Create comprehensive prompt for Gemini
-      const prompt = `
-        Create 3 unique and highly creative marketing content variations based on the following comprehensive campaign setup:
-        
-        BUSINESS PROFILE:
-        - Business Name: ${businessProfile.businessName || 'N/A'}
-        - Business Category: ${businessProfile.businessCategory || 'N/A'}
-        - Location: ${businessProfile.location || 'N/A'}
-        - Brand Voice: ${businessProfile.brandVoice || 'N/A'}
-        - Business Bio: ${businessProfile.businessBio || 'N/A'}
-        - Products/Services: ${businessProfile.productsServices || 'N/A'}
-        
-        CAMPAIGN CONFIGURATION:
-        - Campaign Type: ${campaignType === "personalized" ? "Personalized Marketing - Targeted content for specific customers" : "General Marketing - Broad content for all audiences"}
-        - Platform Type: ${platformType === "direct" ? "Direct to Customer (Email/SMS)" : 
-          platformType === "social" ? "Social Media Post (Facebook, Instagram, Twitter)" :
-          platformType === "email" ? "Email Campaign (Newsletter/Promotional)" :
-          platformType === "local" ? "Local Advertisement (Google Ads, local listings)" : "General Marketing"}
-        - Target Audience Strategy: ${targetAudience === "keyword" ? `Target by Keywords in Purchase History: "${targetKeyword}"` : `Target by Customer Segment: "${selectedSegment}"`}
-        - Call-to-Action Goal: ${callToActionGoal}
-        - Seasonal Theme: ${seasonalTheme || 'None'}
-        - Focus Keywords: ${focusKeywords || 'None specified'}
-        - Additional Instructions: ${additionalInstructions}
-        
-        CUSTOMER DATA INSIGHTS:
-        - Total Customers: ${customerData.length}
-        - Customer Segments: ${JSON.stringify(customerSegments)}
-        - Targeted Customer Count: ${targetedCustomers.length}
-        - Sample Targeted Profiles: ${JSON.stringify(targetedCustomers.slice(0, 3))}
-        
-        ADVANCED REQUIREMENTS:
-        1. Each variation should be distinctly different in approach, tone, and creative execution
-        2. Leverage the specific business details and customer insights intelligently
-        3. Optimize content for the selected platform type and delivery method
-        4. Incorporate the call-to-action goal naturally and persuasively
-        5. Use focus keywords strategically throughout the content
-        6. Apply seasonal theme if specified to enhance relevance
-        7. Follow the additional instructions precisely while maintaining creativity
-        8. Ensure each piece feels genuinely personalized based on customer data
-        9. Create compelling, action-oriented content that drives engagement
-        10. Make the content feel fresh, unique, and professionally crafted
-        
-        Return ONLY a valid JSON object in this exact format:
-        {
-          "variations": [
-            {
-              "title": "Subject line or headline",
-              "content": "Main content body",
-              "cta": "Call to action text"
-            },
-            {
-              "title": "Subject line or headline", 
-              "content": "Main content body",
-              "cta": "Call to action text"
-            },
-            {
-              "title": "Subject line or headline",
-              "content": "Main content body", 
-              "cta": "Call to action text"
-            }
-          ]
+      // Call the secure edge function
+      const { data, error } = await supabase.functions.invoke('generate-marketing-content', {
+        body: {
+          campaignType,
+          platformType,
+          targetAudience,
+          targetKeyword,
+          selectedSegment,
+          callToActionGoal,
+          seasonalTheme,
+          focusKeywords,
+          additionalInstructions,
+          businessProfile,
+          customerData,
+          targetedCustomers
         }
-      `;
-      
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      // Parse the JSON response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsedResponse = JSON.parse(jsonMatch[0]);
-        setGeneratedContent(parsedResponse.variations);
-        setPersonalizedCount(personalizedCount);
-        
-        toast({
-          title: "AI Content Generated Successfully!",
-          description: `Created ${parsedResponse.variations.length} unique variations using advanced targeting and business intelligence.`
-        });
-      } else {
-        throw new Error('Invalid response format from AI');
+      });
+
+      if (error) {
+        throw error;
       }
+
+      if (data.error) {
+        if (data.error.includes('quota')) {
+          toast({
+            title: "Quota Limit Reached",
+            description: "You've exceeded your Gemini API quota. Please wait or upgrade your plan.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Content Generation Failed",
+            description: data.error,
+            variant: "destructive"
+          });
+        }
+        return;
+      }
+
+      setGeneratedContent(data.variations);
+      setPersonalizedCount(data.personalizedCount || 0);
+      
+      toast({
+        title: "AI Content Generated Successfully!",
+        description: `Created ${data.variations.length} unique variations using advanced targeting and business intelligence.`
+      });
       
     } catch (error: any) {
       console.error('Error generating content:', error);
-      
-      // Check if it's a quota error
-      if (error.status === 429 || error.message?.includes('quota')) {
-        toast({
-          title: "Quota Limit Reached",
-          description: "You've exceeded your Gemini API quota. Please wait or upgrade your plan.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Content Generation Failed",
-          description: "Please check your Gemini API key and try again.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Content Generation Failed",
+        description: "Please try again. If the issue persists, check your internet connection.",
+        variant: "destructive"
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -399,7 +320,7 @@ const GenerateContent = () => {
         </Alert>
       )}
 
-      <GeminiApiKeyInput />
+      
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
