@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, ArrowLeft, Phone, Mail, Lock } from "lucide-react";
+import { Sparkles, ArrowLeft, Phone, Mail, Lock, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<'auth' | 'verify' | 'pending'>('auth');
+  const [verificationCode, setVerificationCode] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -104,11 +106,10 @@ const Auth = () => {
           throw error;
         }
       } else {
-        // Simulate phone verification for demo
         setStep('verify');
         toast({
-          title: "Verification Sent",
-          description: "Please check your phone for a verification code.",
+          title: "Verification Email Sent",
+          description: "Please check your email for a verification code.",
         });
       }
     } catch (error: any) {
@@ -140,11 +141,19 @@ const Auth = () => {
       });
 
       if (error) {
-        toast({
-          title: "Sign In Failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email Not Verified",
+            description: "Please check your email and click the verification link before signing in.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Sign In Failed",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
       } else {
         navigate('/dashboard');
       }
@@ -159,13 +168,46 @@ const Auth = () => {
     }
   };
 
-  const handleVerifyPhone = () => {
-    // Simulate phone verification success
-    setStep('pending');
-    toast({
-      title: "Phone Verified!",
-      description: "Your phone number has been successfully verified.",
-    });
+  const handleVerifyEmail = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast({
+        title: "Invalid Code",
+        description: "Please enter a valid 6-digit verification code.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: formData.email,
+        token: verificationCode,
+        type: 'signup'
+      });
+
+      if (error) {
+        toast({
+          title: "Verification Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        setStep('pending');
+        toast({
+          title: "Email Verified!",
+          description: "Your email has been successfully verified.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Verification Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleContinueToDashboard = () => {
@@ -179,11 +221,11 @@ const Auth = () => {
           <Card>
             <CardHeader className="text-center">
               <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Phone className="w-6 h-6 text-white" />
+                <Mail className="w-6 h-6 text-white" />
               </div>
-              <CardTitle>Verify Your Phone Number</CardTitle>
+              <CardTitle>Verify Your Email</CardTitle>
               <CardDescription>
-                We've sent a verification code to {formData.phone}
+                We've sent a verification code to {formData.email}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -192,15 +234,17 @@ const Auth = () => {
                 <Input
                   placeholder="Enter 6-digit code"
                   maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
                   className="text-center text-lg tracking-widest"
                 />
               </div>
               <Button 
-                onClick={handleVerifyPhone}
-                disabled={isLoading}
+                onClick={handleVerifyEmail}
+                disabled={isLoading || !verificationCode || verificationCode.length !== 6}
                 className="w-full"
               >
-                Verify Phone Number
+                {isLoading ? "Verifying..." : "Verify Email"}
               </Button>
               <Button 
                 variant="ghost" 
@@ -275,7 +319,8 @@ const Auth = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="signup" className="w-full">
+        <TooltipProvider>
+          <Tabs defaultValue="signup" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
             <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -306,7 +351,19 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>So that we can contact you</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <div className="relative">
                     <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -415,6 +472,7 @@ const Auth = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        </TooltipProvider>
       </div>
     </div>
   );
