@@ -196,10 +196,9 @@ const Auth = () => {
                 
                 <Button 
                   onClick={handleSignUp}
-                  disabled={isLoading}
                   className="w-full bg-gradient-primary hover:opacity-90"
                 >
-                  {isLoading ? "Creating Account..." : "Create Account"}
+                  Create Account
                 </Button>
                 
                 <p className="text-xs text-muted-foreground text-center">
