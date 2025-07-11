@@ -80,48 +80,16 @@ const Auth = () => {
   };
 
   const handleSignUp = async () => {
-    if (!validateForm(true)) return;
-
-    setIsLoading(true);
-    try {
-      // Send OTP to email for verification
-      const { error } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: {
-          shouldCreateUser: true,
-          data: {
-            phone: formData.phone,
-            password: formData.password
-          }
-        }
-      });
-
-      if (error) {
-        if (error.message.includes('already registered')) {
-          toast({
-            title: "Account Exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive"
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        setStep('verify');
-        toast({
-          title: "Verification Code Sent",
-          description: "Please check your email for a 6-digit verification code.",
-        });
-      }
-    } catch (error: any) {
+    if (!formData.email) {
       toast({
-        title: "Sign Up Failed",
-        description: error.message,
+        title: "Missing Information",
+        description: "Please enter your email address.",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    navigate('/dashboard');
   };
 
   const handleSignIn = async () => {
