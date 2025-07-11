@@ -149,94 +149,21 @@ const Dashboard = () => {
   };
 
   const getBusinessSpecificIdeas = () => {
-    const businessName = businessProfile?.business_name || "your business";
-    const category = businessProfile?.business_category?.toLowerCase() || "business";
+    const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
+    const businessCategory = businessProfile.businessCategory || 'general';
     
-    if (category.includes("restaurant") || category.includes("cafe") || category.includes("food")) {
-      return [
-        {
-          title: "Feature Today's Special Menu",
-          description: `Highlight ${businessName}'s daily specials with mouth-watering descriptions and behind-the-scenes preparation shots.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Share Chef's Secret Recipe Tip",
-          description: `Give customers a peek into ${businessName}'s kitchen secrets - a cooking tip or ingredient spotlight.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Customer's Favorite Dish Story",
-          description: `Feature a regular customer and their go-to order at ${businessName}, making it personal and relatable.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
-    } else if (category.includes("retail") || category.includes("shop")) {
-      return [
-        {
-          title: "New Product Showcase",
-          description: `Introduce ${businessName}'s latest arrivals with styling tips or usage ideas.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Behind-the-Scenes Sourcing",
-          description: `Show how ${businessName} selects quality products and the story behind your curated selection.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Customer Style Feature",
-          description: `Highlight how real customers style or use products from ${businessName}.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
-    } else if (category.includes("service") || category.includes("health") || category.includes("beauty")) {
-      return [
-        {
-          title: "Client Success Transformation",
-          description: `Share a before/after story showcasing ${businessName}'s impact on a client's life or goals.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Expert Tips & Advice",
-          description: `Share professional insights and tips that position ${businessName} as the go-to expert in your field.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Team Member Spotlight",
-          description: `Introduce the skilled professionals at ${businessName} and their unique expertise.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
-    } else {
-      return [
-        {
-          title: "Share a Customer Success Story",
-          description: `Highlight how ${businessName} made a real difference in a customer's experience.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Behind-the-Scenes Content",
-          description: `Give customers a peek into the daily operations and passion behind ${businessName}.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Community Impact Story",
-          description: `Show how ${businessName} contributes to and supports the local community.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
-    }
+    // Import and use the suggestions system
+    const { getSuggestionsForBusiness } = require('@/utils/suggestions');
+    const suggestions = getSuggestionsForBusiness(businessCategory, currentTime);
+    
+    return suggestions.map((suggestion: any) => ({
+      id: suggestion.id,
+      title: suggestion.title,
+      description: suggestion.description,
+      priority: suggestion.priority === 'high' ? 'high priority' : 'medium priority',
+      color: suggestion.priority === 'high' ? 'destructive' : 'secondary',
+      type: suggestion.type
+    }));
   };
 
   const contentIdeas = getBusinessSpecificIdeas();
@@ -503,16 +430,10 @@ const Dashboard = () => {
                   className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                   onClick={() => {
                     // Map suggestions to URL parameters for auto-population
-                    let suggestionType = 'general';
-                    if (idea.title.toLowerCase().includes('special') || idea.title.toLowerCase().includes('menu')) {
-                      suggestionType = 'seasonal-promo';
-                    } else if (idea.title.toLowerCase().includes('customer') || idea.title.toLowerCase().includes('story')) {
-                      suggestionType = 'personalized-email';
-                    } else if (idea.title.toLowerCase().includes('community') || idea.title.toLowerCase().includes('local')) {
-                      suggestionType = 'local-event';
-                    }
+                    const { mapSuggestionToRoute } = require('@/utils/suggestions');
+                    const suggestionType = mapSuggestionToRoute(idea);
                     
-                    navigate(`/dashboard/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(idea.title)}&description=${encodeURIComponent(idea.description)}`);
+                    navigate(`/dashboard/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(idea.title)}&description=${encodeURIComponent(idea.description)}&type=${idea.type}`);
                   }}
                 >
                   <div className="flex-1">
