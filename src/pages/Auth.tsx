@@ -84,13 +84,14 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // Send OTP to email for verification
+      const { error } = await supabase.auth.signInWithOtp({
         email: formData.email,
-        password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          shouldCreateUser: true,
           data: {
-            phone: formData.phone
+            phone: formData.phone,
+            password: formData.password
           }
         }
       });
@@ -108,8 +109,8 @@ const Auth = () => {
       } else {
         setStep('verify');
         toast({
-          title: "Verification Email Sent",
-          description: "Please check your email for a verification code.",
+          title: "Verification Code Sent",
+          description: "Please check your email for a 6-digit verification code.",
         });
       }
     } catch (error: any) {
