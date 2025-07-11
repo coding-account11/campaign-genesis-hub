@@ -14,8 +14,6 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'auth' | 'verify' | 'pending'>('auth');
-  const [verificationCode, setVerificationCode] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -36,47 +34,6 @@ const Auth = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const validateForm = (isSignUp: boolean) => {
-    if (!formData.email || !formData.phone || !formData.password) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (isSignUp && formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (formData.password.length < 6) {
-      toast({
-        title: "Password Too Short",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
-    if (!phoneRegex.test(formData.phone)) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    return true;
   };
 
   const handleSignUp = () => {
@@ -127,136 +84,6 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
-
-  const handleVerifyEmail = async () => {
-    if (!verificationCode || verificationCode.length !== 6) {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a valid 6-digit verification code.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: formData.email,
-        token: verificationCode,
-        type: 'signup'
-      });
-
-      if (error) {
-        toast({
-          title: "Verification Failed",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        setStep('pending');
-        toast({
-          title: "Email Verified!",
-          description: "Your email has been successfully verified.",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Verification Failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleContinueToDashboard = () => {
-    navigate('/dashboard');
-  };
-
-  if (step === 'verify') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader className="text-center">
-              <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle>Verify Your Email</CardTitle>
-              <CardDescription>
-                We've sent a verification code to {formData.email}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Verification Code</Label>
-                <Input
-                  placeholder="Enter 6-digit code"
-                  maxLength={6}
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  className="text-center text-lg tracking-widest"
-                />
-              </div>
-              <Button 
-                onClick={handleVerifyEmail}
-                disabled={isLoading || !verificationCode || verificationCode.length !== 6}
-                className="w-full"
-              >
-                {isLoading ? "Verifying..." : "Verify Email"}
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setStep('auth')}
-                className="w-full"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Sign Up
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 'pending') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader className="text-center">
-              <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle>Welcome to PromoPal!</CardTitle>
-              <CardDescription>
-                Your account has been created successfully
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-muted/50 p-4 rounded-lg text-center">
-                <h3 className="font-semibold mb-2">Next Steps</h3>
-                <p className="text-sm text-muted-foreground">
-                  Our team will contact you within 24 hours via phone to discuss our service plans and help you get the most out of PromoPal. 
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  In the meantime, you can explore your dashboard and start setting up your business profile.
-                </p>
-              </div>
-              <Button 
-                onClick={handleContinueToDashboard}
-                className="w-full bg-gradient-primary hover:opacity-90"
-              >
-                Continue to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
