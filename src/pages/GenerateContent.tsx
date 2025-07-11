@@ -9,17 +9,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Sparkles, 
   Copy, 
   Save,
   Users,
-  Zap
+  Zap,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface ContentVariation {
   title: string;
@@ -30,6 +32,7 @@ interface ContentVariation {
 const GenerateContent = () => {
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const [campaignType, setCampaignType] = useState("personalized");
   const [platformType, setPlatformType] = useState("direct");
   const [targetAudience, setTargetAudience] = useState("keyword");
@@ -317,6 +320,11 @@ const GenerateContent = () => {
   };
 
 
+  // Check for warnings
+  const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
+  const hasBusinessProfile = Object.keys(businessProfile).length > 0 && businessProfile.businessName;
+  const hasCustomerData = customerData.length > 0;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -330,6 +338,42 @@ const GenerateContent = () => {
           </p>
         </div>
       </div>
+
+      {/* Business Profile Warning */}
+      {!hasBusinessProfile && (
+        <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-700 dark:text-red-300">
+            <span className="font-medium">Business Profile Required:</span> Please{" "}
+            <Button 
+              variant="link" 
+              className="p-0 h-auto text-red-700 dark:text-red-300 underline"
+              onClick={() => navigate("/dashboard/business-profile")}
+            >
+              fill out your business profile
+            </Button>{" "}
+            to get personalized content suggestions.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Customer Data Warning for Personalized Marketing */}
+      {campaignType === "personalized" && !hasCustomerData && (
+        <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-700 dark:text-red-300">
+            <span className="font-medium">Customer Data Required:</span> Please{" "}
+            <Button 
+              variant="link" 
+              className="p-0 h-auto text-red-700 dark:text-red-300 underline"
+              onClick={() => navigate("/dashboard/customer-data")}
+            >
+              add customer data
+            </Button>{" "}
+            to create personalized marketing campaigns.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <GeminiApiKeyInput />
 
