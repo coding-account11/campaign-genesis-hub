@@ -72,39 +72,63 @@ const GenerateContent = () => {
     const suggestion = urlParams.get('suggestion');
     const title = urlParams.get('title');
     const description = urlParams.get('description');
+    const segment = urlParams.get('segment');
     
     if (suggestion) {
       // Auto-populate based on suggestion type
-      switch (suggestion) {
-        case 'personalized-email':
-          setCampaignType('personalized');
-          setPlatformType('direct');
-          setCallToActionGoal('make_purchase');
-          setAdditionalInstructions(description || 'Create personalized email content based on customer purchase history to drive repeat sales.');
-          break;
-        case 'seasonal-promo':
-          setCampaignType('general');
-          setPlatformType('social');
-          setSeasonalTheme('holiday');
-          setCallToActionGoal('visit_store');
-          setAdditionalInstructions(description || 'Create seasonal promotional content to increase foot traffic and holiday sales.');
-          break;
-        case 'loyalty-program':
-          setCampaignType('personalized');
-          setPlatformType('direct');
-          setCallToActionGoal('join_loyalty');
-          setAdditionalInstructions(description || 'Promote loyalty program benefits to encourage customer retention and repeat business.');
-          break;
-        case 'local-event':
-          setCampaignType('general');
-          setPlatformType('local');
-          setCallToActionGoal('visit_store');
-          setAdditionalInstructions(description || 'Promote local events or community engagement to build brand awareness.');
-          break;
-        default:
-          if (description) {
-            setAdditionalInstructions(description);
-          }
+      if (suggestion === 'personalized-email' || suggestion === 'personalized') {
+        setCampaignType('personalized');
+        setPlatformType('direct');
+        setTargetAudience('segment');
+        setCallToActionGoal('make_purchase');
+        
+        // Set segment if provided
+        if (segment) {
+          setSelectedSegment(segment);
+        }
+        
+        // Create specific instructions based on suggestion
+        if (title && description) {
+          setAdditionalInstructions(`${title}: ${description}`);
+        } else {
+          setAdditionalInstructions(description || 'Create personalized email content based on customer data to drive engagement.');
+        }
+      } else if (suggestion === 'general') {
+        setCampaignType('general');
+        setPlatformType('social');
+        setCallToActionGoal('visit_store');
+        
+        if (title && description) {
+          setAdditionalInstructions(`${title}: ${description}`);
+        } else {
+          setAdditionalInstructions(description || 'Create engaging social media content to increase brand awareness.');
+        }
+      } else {
+        // Handle specific suggestion types
+        switch (suggestion) {
+          case 'seasonal-promo':
+            setCampaignType('general');
+            setPlatformType('social');
+            setSeasonalTheme('holiday');
+            setCallToActionGoal('visit_store');
+            break;
+          case 'loyalty-program':
+            setCampaignType('personalized');
+            setPlatformType('direct');
+            setCallToActionGoal('join_loyalty');
+            break;
+          case 'local-event':
+            setCampaignType('general');
+            setPlatformType('local');
+            setCallToActionGoal('visit_store');
+            break;
+        }
+        
+        if (title && description) {
+          setAdditionalInstructions(`${title}: ${description}`);
+        } else if (description) {
+          setAdditionalInstructions(description);
+        }
       }
       
       // Clear URL parameters after setting values

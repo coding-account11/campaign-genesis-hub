@@ -14,7 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaigns: {
+        Row: {
+          campaign_type: string
+          content: string
+          created_at: string
+          id: string
+          scheduled_date: string | null
+          status: string | null
+          target_segment: string | null
+          title: string
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          campaign_type: string
+          content: string
+          created_at?: string
+          id?: string
+          scheduled_date?: string | null
+          status?: string | null
+          target_segment?: string | null
+          title: string
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          campaign_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          scheduled_date?: string | null
+          status?: string | null
+          target_segment?: string | null
+          title?: string
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: []
+      }
+      customer_data: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          purchase_history: string | null
+          segment: string | null
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          purchase_history?: string | null
+          segment?: string | null
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          purchase_history?: string | null
+          segment?: string | null
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          brand_voice: string | null
+          business_bio: string | null
+          business_category: string | null
+          business_name: string | null
+          created_at: string
+          email: string
+          id: string
+          location: string | null
+          phone: string | null
+          products_services: string | null
+          signup_date: string
+          updated_at: string
+        }
+        Insert: {
+          brand_voice?: string | null
+          business_bio?: string | null
+          business_category?: string | null
+          business_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          location?: string | null
+          phone?: string | null
+          products_services?: string | null
+          signup_date?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_voice?: string | null
+          business_bio?: string | null
+          business_category?: string | null
+          business_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          location?: string | null
+          phone?: string | null
+          products_services?: string | null
+          signup_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

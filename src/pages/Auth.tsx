@@ -5,9 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     email: "",
     phone: "",
@@ -15,6 +18,7 @@ const Auth = () => {
     confirmPassword: ""
   });
   const [isSignUp, setIsSignUp] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -23,22 +27,47 @@ const Auth = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Save user data to localStorage
-    if (isSignUp) {
-      localStorage.setItem('userData', JSON.stringify({
-        email: formData.email,
-        phone: formData.phone,
-        signupDate: new Date().toISOString()
-      }));
-      
-      // Navigate to contact page after signup
-      navigate("/contact");
-    } else {
-      // For login, go directly to dashboard
-      navigate("/dashboard");
+    try {
+      if (isSignUp) {
+        // Save user data to Supabase
+        const { error } = await supabase
+          .from('user_profiles')
+          .insert({
+            email: formData.email,
+            phone: formData.phone,
+            signup_date: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error('Error saving user data:', error);
+        }
+
+        // Also save to localStorage for immediate use
+        localStorage.setItem('currentUserEmail', formData.email);
+        localStorage.setItem('userData', JSON.stringify({
+          email: formData.email,
+          phone: formData.phone,
+          signupDate: new Date().toISOString()
+        }));
+        
+        navigate("/contact");
+      } else {
+        // For login, just save email and go to dashboard
+        localStorage.setItem('currentUserEmail', formData.email);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -125,8 +154,8 @@ const Auth = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full">
-              {isSignUp ? "Create Account" : "Sign In"}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Processing..." : (isSignUp ? "Create Account" : "Sign In")}
             </Button>
 
             <div className="text-center">

@@ -586,89 +586,146 @@ const NewDashboard = () => {
         </Card>
       </div>
 
-      {/* Dynamic Suggestion Card */}
-      <Card className="bg-gradient-primary text-white border-0 shadow-elegant">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="w-5 h-5" />
-                <span className="text-white/90">
-                  AI Suggestion • {currentSuggestion?.type === 'personalized' ? 'Personalized' : 'General'}
-                </span>
-                <Badge 
-                  variant="secondary" 
-                  className={`text-xs ${
-                    currentSuggestion?.priority === 'high' 
-                      ? 'bg-red-500 text-white' 
-                      : 'bg-white/20 text-white'
-                  }`}
-                >
-                  {currentSuggestion?.priority} priority
+      {/* Today's Suggestions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-brand-purple" />
+                    Today's Suggestions
+                  </CardTitle>
+                  <CardDescription>Content ideas for Today</CardDescription>
+                </div>
+                <Badge variant="secondary" className="text-xs">
+                  AI-powered
                 </Badge>
               </div>
-              <h3 className="text-lg font-semibold mb-2">{currentSuggestion?.title}</h3>
-              <p className="text-white/90 mb-4">{currentSuggestion?.description}</p>
-              <Button 
-                variant="secondary"
-                onClick={() => {
-                  const suggestionType = currentSuggestion?.type === 'personalized' ? 'personalized-email' : 'general';
-                  navigate(`/dashboard/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(currentSuggestion?.title || '')}&description=${encodeURIComponent(currentSuggestion?.description || '')}`);
-                }}
-                className="bg-white text-primary hover:bg-white/90"
-              >
-                Create This Campaign
-              </Button>
-            </div>
-            <div className="hidden md:block">
-              <div className="text-right">
-                <Wand2 className="w-12 h-12 text-white/30 mx-auto mb-2" />
-                <div className="text-xs text-white/60">
-                  {currentSuggestionIndex + 1} of {suggestions.length}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {suggestions.slice(0, 3).map((suggestion, index) => (
+                <div 
+                  key={index}
+                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-secondary/50 cursor-pointer transition-colors"
+                  onClick={() => {
+                    const suggestionType = suggestion.type === 'personalized' ? 'personalized-email' : 'general';
+                    const segment = suggestion.type === 'personalized' ? suggestion.category : '';
+                    navigate(`/dashboard/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(suggestion.title)}&description=${encodeURIComponent(suggestion.description)}&segment=${encodeURIComponent(segment)}`);
+                  }}
+                >
+                  <div className="flex-1">
+                    <h4 className="font-medium mb-1">{suggestion.title}</h4>
+                    <p className="text-sm text-muted-foreground mb-2">{suggestion.description}</p>
+                    <Badge 
+                      variant={suggestion.priority === 'high' ? 'destructive' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {suggestion.priority} priority
+                    </Badge>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-brand-purple">
+                    →
+                  </Button>
                 </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Button 
-          variant="outline" 
-          className="h-24 flex-col gap-2"
-          onClick={() => navigate("/dashboard/generate-content")}
-        >
-          <Sparkles className="w-6 h-6 text-brand-purple" />
-          <span>Generate Content</span>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="h-24 flex-col gap-2"
-          onClick={() => navigate("/dashboard/marketing-calendar")}
-        >
-          <Calendar className="w-6 h-6 text-brand-teal" />
-          <span>View Calendar</span>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="h-24 flex-col gap-2"
-          onClick={() => navigate("/dashboard/customer-data")}
-        >
-          <Users className="w-6 h-6 text-brand-purple" />
-          <span>Customer Data</span>
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="h-24 flex-col gap-2"
-          onClick={() => navigate("/dashboard/business-profile")}
-        >
-          <BarChart3 className="w-6 h-6 text-brand-teal" />
-          <span>Business Profile</span>
-        </Button>
+        {/* Quick Actions Sidebar */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-brand-teal" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3"
+                onClick={() => navigate("/dashboard/generate-content")}
+              >
+                <div className="w-8 h-8 bg-brand-purple/10 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-brand-purple" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">Generate Content</div>
+                  <div className="text-xs text-muted-foreground">Create AI-powered marketing posts</div>
+                </div>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3"
+                onClick={() => navigate("/dashboard/marketing-calendar")}
+              >
+                <div className="w-8 h-8 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-brand-teal" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">View Calendar</div>
+                  <div className="text-xs text-muted-foreground">Check your marketing schedule</div>
+                </div>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3"
+                onClick={() => navigate("/dashboard/customer-data")}
+              >
+                <div className="w-8 h-8 bg-brand-purple/10 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-brand-purple" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">Manage Customers</div>
+                  <div className="text-xs text-muted-foreground">Upload and organize customer data</div>
+                </div>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3"
+                onClick={() => navigate("/dashboard/settings")}
+              >
+                <div className="w-8 h-8 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-brand-teal" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">Settings</div>
+                  <div className="text-xs text-muted-foreground">Configure your preferences</div>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Marketing Tips */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-brand-purple" />
+                Marketing Tips
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-1">Post Consistently</h4>
+                <p className="text-sm text-muted-foreground">
+                  Regular posting keeps your audience engaged. Aim for 3-5 posts per week.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">Use Seasonal Content</h4>
+                <p className="text-sm text-muted-foreground">
+                  Leverage holidays and seasons to create timely, relevant content.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

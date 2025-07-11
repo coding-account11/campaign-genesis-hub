@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,25 +8,63 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Upload, FileText, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const BusinessProfile = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    businessName: "Cozy Corner Cafe",
-    businessCategory: "restaurant",
-    location: "Downtown, Springfield",
-    businessEmail: "user@example.com",
+    businessName: "",
+    businessCategory: "",
+    location: "",
+    businessEmail: "",
     brandVoice: "friendly",
-    businessBio: "A warm, welcoming neighborhood cafe serving freshly roasted coffee and homemade pastries since 2018.",
-    productsServices: "• Specialty coffee drinks (espresso, lattes, cappuccinos)\n• Fresh pastries and baked goods\n• Light lunch options (sandwiches, salads)\n• Catering services for local events\n• Coffee beans for retail purchase"
+    businessBio: "",
+    productsServices: ""
   });
+  const [loading, setLoading] = useState(true);
   
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([
-    "summer-menu-2024.pdf",
-    "catering-brochure.pdf"
-  ]);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [isExistingUser, setIsExistingUser] = useState(false);
 
-  const [isExistingUser, setIsExistingUser] = useState(true);
+  // Load user data on component mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      const currentUserEmail = localStorage.getItem('currentUserEmail');
+      
+      if (currentUserEmail) {
+        // Try to load from Supabase first
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('email', currentUserEmail)
+          .single();
+
+        if (profile) {
+          setFormData({
+            businessName: profile.business_name || "",
+            businessCategory: profile.business_category || "",
+            location: profile.location || "",
+            businessEmail: profile.email,
+            brandVoice: profile.brand_voice || "friendly",
+            businessBio: profile.business_bio || "",
+            productsServices: profile.products_services || ""
+          });
+          setIsExistingUser(!!profile.business_name);
+        } else {
+          // Fallback to localStorage
+          const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+          setFormData(prev => ({
+            ...prev,
+            businessEmail: userData.email || currentUserEmail
+          }));
+        }
+      }
+      
+      setLoading(false);
+    };
+
+    loadUserData();
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -48,17 +86,57 @@ const BusinessProfile = () => {
     setUploadedFiles(prev => prev.filter(file => file !== fileName));
   };
 
-  const handleSave = () => {
-    // Save business profile to localStorage
-    localStorage.setItem('businessProfile', JSON.stringify(formData));
-    
-    toast({
-      title: "Profile updated successfully",
-      description: "Your business profile has been saved."
-    });
+  const handleSave = async () => {
+    try {
+      const currentUserEmail = localStorage.getItem('currentUserEmail');
+      
+      if (currentUserEmail) {
+        // Update in Supabase
+        const { error } = await supabase
+          .from('user_profiles')
+          .update({
+            business_name: formData.businessName,
+            business_category: formData.businessCategory,
+            location: formData.location,
+            brand_voice: formData.brandVoice,
+            business_bio: formData.businessBio,
+            products_services: formData.productsServices
+          })
+          .eq('email', currentUserEmail);
+
+        if (error) {
+          console.error('Error updating profile:', error);
+        }
+      }
+      
+      // Also save to localStorage for immediate use
+      localStorage.setItem('businessProfile', JSON.stringify(formData));
+      
+      toast({
+        title: "Profile updated successfully",
+        description: "Your business profile has been saved."
+      });
+      
+      setIsExistingUser(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const pageTitle = isExistingUser ? "Edit Business Profile" : "Set Up Your Business Profile";
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="h-32 bg-muted rounded-lg animate-pulse" />
+        <div className="h-96 bg-muted rounded-lg animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
