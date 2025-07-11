@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Sparkles, Calendar, Users, TrendingUp, Clock, Wand2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSuggestionsForBusiness, mapSuggestionToRoute } from "@/utils/suggestions";
 
 interface BusinessProfile {
   business_name: string;
@@ -152,8 +153,7 @@ const Dashboard = () => {
     const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
     const businessCategory = businessProfile.businessCategory || 'general';
     
-    // Import and use the suggestions system
-    const { getSuggestionsForBusiness } = require('@/utils/suggestions');
+    // Use the suggestions system
     const suggestions = getSuggestionsForBusiness(businessCategory, currentTime);
     
     return suggestions.map((suggestion: any) => ({
@@ -429,11 +429,16 @@ const Dashboard = () => {
                   key={index}
                   className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                   onClick={() => {
-                    // Map suggestions to URL parameters for auto-population
-                    const { mapSuggestionToRoute } = require('@/utils/suggestions');
-                    const suggestionType = mapSuggestionToRoute(idea);
+                    // Find the original suggestion to use for mapping
+                    const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
+                    const businessCategory = businessProfile.businessCategory || 'general';
+                    const suggestions = getSuggestionsForBusiness(businessCategory, currentTime);
+                    const originalSuggestion = suggestions.find(s => s.id === idea.id);
                     
-                    navigate(`/dashboard/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(idea.title)}&description=${encodeURIComponent(idea.description)}&type=${idea.type}`);
+                    if (originalSuggestion) {
+                      const suggestionType = mapSuggestionToRoute(originalSuggestion);
+                      navigate(`/dashboard/generate-content?suggestion=${suggestionType}&title=${encodeURIComponent(idea.title)}&description=${encodeURIComponent(idea.description)}&type=${idea.type}`);
+                    }
                   }}
                 >
                   <div className="flex-1">
