@@ -49,7 +49,7 @@ const BusinessProfile = () => {
             brandVoice: profile.brand_voice || "friendly",
             businessBio: profile.business_bio || "",
             productsServices: profile.products_services || "",
-            businessMaterials: profile.business_materials || ""
+          businessMaterials: profile.business_materials || ""
           });
           setIsExistingUser(!!profile.business_name);
         } else {
@@ -102,7 +102,8 @@ const BusinessProfile = () => {
             location: formData.location,
             brand_voice: formData.brandVoice,
             business_bio: formData.businessBio,
-            products_services: formData.productsServices
+            products_services: formData.productsServices,
+            business_materials: formData.businessMaterials
           })
           .eq('email', currentUserEmail);
 

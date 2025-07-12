@@ -111,98 +111,102 @@ const Dashboard = () => {
     return "Good evening";
   };
 
-  const getBusinessSpecificIdeas = () => {
+  // 30 daily suggestions pool
+  const allSuggestions = [
+    "Share behind-the-scenes content of your daily operations",
+    "Feature a customer testimonial or success story",
+    "Post about your team members and their expertise",
+    "Create content around seasonal trends in your industry",
+    "Share tips and tricks related to your products/services",
+    "Highlight a product or service with educational content",
+    "Post about local community events you're involved in",
+    "Share your business's origin story or milestones",
+    "Create content around current industry news or trends",
+    "Feature user-generated content from customers",
+    "Share before/after transformations (if applicable)",
+    "Post about your business values and mission",
+    "Create educational content about your industry",
+    "Share a day-in-the-life content of your business",
+    "Highlight partnerships with other local businesses",
+    "Post about sustainability practices in your business",
+    "Share interesting facts about your products/services",
+    "Create content around customer questions and answers",
+    "Feature your business's role in the community",
+    "Share upcoming promotions or special events",
+    "Post about innovations or improvements in your business",
+    "Create content around customer appreciation",
+    "Share industry insights and predictions",
+    "Feature the story behind a popular product/service",
+    "Post about your business's achievements and awards",
+    "Create content around problem-solving for customers",
+    "Share wellness or lifestyle tips related to your business",
+    "Feature collaborative content with industry experts",
+    "Post about the quality and sourcing of your products",
+    "Create content that showcases your business expertise"
+  ];
+
+  const getDailySuggestions = () => {
     const businessName = businessProfile?.business_name || "your business";
-    const category = businessProfile?.business_category?.toLowerCase() || "business";
     
-    if (category.includes("restaurant") || category.includes("cafe") || category.includes("food")) {
-      return [
-        {
-          title: "Feature Today's Special Menu",
-          description: `Highlight ${businessName}'s daily specials with mouth-watering descriptions and behind-the-scenes preparation shots.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Share Chef's Secret Recipe Tip",
-          description: `Give customers a peek into ${businessName}'s kitchen secrets - a cooking tip or ingredient spotlight.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Customer's Favorite Dish Story",
-          description: `Feature a regular customer and their go-to order at ${businessName}, making it personal and relatable.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
-    } else if (category.includes("retail") || category.includes("shop")) {
-      return [
-        {
-          title: "New Product Showcase",
-          description: `Introduce ${businessName}'s latest arrivals with styling tips or usage ideas.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Behind-the-Scenes Sourcing",
-          description: `Show how ${businessName} selects quality products and the story behind your curated selection.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Customer Style Feature",
-          description: `Highlight how real customers style or use products from ${businessName}.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
-    } else if (category.includes("service") || category.includes("health") || category.includes("beauty")) {
-      return [
-        {
-          title: "Client Success Transformation",
-          description: `Share a before/after story showcasing ${businessName}'s impact on a client's life or goals.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Expert Tips & Advice",
-          description: `Share professional insights and tips that position ${businessName} as the go-to expert in your field.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Team Member Spotlight",
-          description: `Introduce the skilled professionals at ${businessName} and their unique expertise.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
-    } else {
-      return [
-        {
-          title: "Share a Customer Success Story",
-          description: `Highlight how ${businessName} made a real difference in a customer's experience.`,
-          priority: "high priority",
-          color: "destructive"
-        },
-        {
-          title: "Behind-the-Scenes Content",
-          description: `Give customers a peek into the daily operations and passion behind ${businessName}.`,
-          priority: "medium priority",
-          color: "secondary"
-        },
-        {
-          title: "Community Impact Story",
-          description: `Show how ${businessName} contributes to and supports the local community.`,
-          priority: "medium priority",
-          color: "secondary"
-        }
-      ];
+    // Get today's date as a seed for consistent daily rotation
+    const today = new Date();
+    const dateString = today.toDateString();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    
+    // Get or create rotation state from localStorage
+    const storageKey = 'dailySuggestionRotation';
+    let rotationState = JSON.parse(localStorage.getItem(storageKey) || '{"usedSuggestions": [], "currentCycle": 0}');
+    
+    // Check if it's a new day
+    const lastUpdateKey = 'lastSuggestionUpdate';
+    const lastUpdate = localStorage.getItem(lastUpdateKey);
+    
+    if (lastUpdate !== dateString) {
+      // New day - select new suggestions
+      if (rotationState.usedSuggestions.length >= allSuggestions.length) {
+        // Reset cycle when all suggestions have been used
+        rotationState = { usedSuggestions: [], currentCycle: rotationState.currentCycle + 1 };
+      }
+      
+      // Get available suggestions (not yet used)
+      const availableSuggestions = allSuggestions.filter((_, index) => 
+        !rotationState.usedSuggestions.includes(index)
+      );
+      
+      // Randomly select 3 suggestions
+      const selectedIndices = [];
+      const shuffled = [...Array(availableSuggestions.length).keys()];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      
+      for (let i = 0; i < Math.min(3, availableSuggestions.length); i++) {
+        const originalIndex = allSuggestions.indexOf(availableSuggestions[shuffled[i]]);
+        selectedIndices.push(originalIndex);
+        rotationState.usedSuggestions.push(originalIndex);
+      }
+      
+      // Store today's selections
+      rotationState.todaysSelections = selectedIndices;
+      localStorage.setItem(storageKey, JSON.stringify(rotationState));
+      localStorage.setItem(lastUpdateKey, dateString);
     }
+    
+    // Use today's selections to build the suggestions
+    const todaysIndices = rotationState.todaysSelections || [0, 1, 2];
+    return todaysIndices.map((index, i) => {
+      const suggestion = allSuggestions[index] || allSuggestions[0];
+      return {
+        title: suggestion,
+        description: `Create engaging content for ${businessName} - ${suggestion.toLowerCase()}`,
+        priority: i === 0 ? "high priority" : "medium priority",
+        color: i === 0 ? "destructive" : "secondary"
+      };
+    });
   };
 
-  const contentIdeas = getBusinessSpecificIdeas();
+  const contentIdeas = getDailySuggestions();
 
   if (loading) {
     return (

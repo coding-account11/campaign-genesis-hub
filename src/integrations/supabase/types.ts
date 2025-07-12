@@ -97,6 +97,7 @@ export type Database = {
           brand_voice: string | null
           business_bio: string | null
           business_category: string | null
+          business_materials: string | null
           business_name: string | null
           created_at: string
           email: string
@@ -111,6 +112,7 @@ export type Database = {
           brand_voice?: string | null
           business_bio?: string | null
           business_category?: string | null
+          business_materials?: string | null
           business_name?: string | null
           created_at?: string
           email: string
@@ -125,6 +127,7 @@ export type Database = {
           brand_voice?: string | null
           business_bio?: string | null
           business_category?: string | null
+          business_materials?: string | null
           business_name?: string | null
           created_at?: string
           email?: string
