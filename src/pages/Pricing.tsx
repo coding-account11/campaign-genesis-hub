@@ -32,7 +32,7 @@ const Pricing = () => {
     "Priority phone consultation"
   ];
 
-  const monthlyPrice = isAnnual ? 49 : 199;
+  const monthlyPrice = isAnnual ? 29 : 99;
   const billingText = isAnnual ? "Billed Annually" : "Billed Monthly";
 
   return (
@@ -158,12 +158,12 @@ const Pricing = () => {
                 size="lg"
                 onClick={() => navigate("/auth")}
               >
-                Start Your Free Trial
+                Get Started
                 <Sparkles className="w-4 h-4 ml-2" />
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
-                * Our team will contact you to discuss plan details and ensure you get the most value from PromoPal.
+                Free trial for 7 days will be enabled after the phone call. Our team will contact you to discuss plan details and ensure you get the most value from PromoPal.
               </p>
             </CardContent>
           </Card>

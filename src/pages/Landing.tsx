@@ -127,7 +127,7 @@ const Landing = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button size="lg" className="px-8 py-6 text-lg" onClick={() => navigate("/auth")}>
-              Start Your Free Trial
+              Get Started
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button variant="outline" size="lg" className="px-8 py-6 text-lg" onClick={() => navigate("/pricing")}>
@@ -187,32 +187,49 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* How It Works Section */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">What Our Customers Say</h2>
+            <h2 className="text-3xl font-bold mb-4">How PromoPal Works</h2>
             <p className="text-lg text-muted-foreground">
-              Don't just take our word for it - hear from successful business owners
+              Get up and running with AI-powered marketing in three simple steps
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-foreground mb-4 italic">"{testimonial.text}"</p>
-                  <div>
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.business}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <Card className="border-0 shadow-lg text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-lg">1</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Connect Your Business</h3>
+                <p className="text-muted-foreground">
+                  Tell us about your business, products, and target audience in just a few minutes.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-lg text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-lg">2</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-3">AI Creates Content</h3>
+                <p className="text-muted-foreground">
+                  Our AI generates personalized marketing content tailored to your business and customers.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-lg text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-lg">3</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Watch Growth Happen</h3>
+                <p className="text-muted-foreground">
+                  Deploy your campaigns and track results as your business grows with data-driven marketing.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
