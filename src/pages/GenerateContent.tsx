@@ -26,6 +26,8 @@ interface ContentVariation {
   title: string;
   content: string;
   cta: string;
+  imageIdeas: string[];
+  additionalSuggestions: string[];
 }
 
 const GenerateContent = () => {
@@ -250,6 +252,8 @@ const GenerateContent = () => {
       type: campaignType,
       targetAudience: targetAudience === "keyword" ? targetKeyword : selectedSegment,
       cta: content.cta,
+      imageIdeas: content.imageIdeas,
+      additionalSuggestions: content.additionalSuggestions,
       createdAt: new Date().toISOString(),
       status: 'scheduled',
       date: new Date()
@@ -594,6 +598,28 @@ const GenerateContent = () => {
                           <Label className="text-sm font-medium">Call to Action</Label>
                           <div className="mt-1 p-3 border rounded-lg bg-muted/50">
                             <p className="font-medium text-brand-purple">{variation.cta}</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">Image Ideas</Label>
+                          <div className="mt-1 p-3 border rounded-lg bg-muted/50">
+                            <ul className="space-y-1">
+                              {variation.imageIdeas?.map((idea, idx) => (
+                                <li key={idx} className="text-sm">• {idea}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">Additional Suggestions</Label>
+                          <div className="mt-1 p-3 border rounded-lg bg-muted/50">
+                            <ul className="space-y-1">
+                              {variation.additionalSuggestions?.map((suggestion, idx) => (
+                                <li key={idx} className="text-sm">• {suggestion}</li>
+                              ))}
+                            </ul>
                           </div>
                         </div>
 

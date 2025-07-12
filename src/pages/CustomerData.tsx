@@ -31,7 +31,8 @@ import {
   Download, 
   Edit, 
   Info,
-  Sparkles 
+  Sparkles,
+  Trash2 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -157,36 +158,47 @@ const CustomerData = () => {
             
             // Only add if we have at least a name
             if (name) {
-              // Intelligent segmentation based on available data
+            // Intelligent segmentation based on available data
               let segment = 'new';
-              let segmentReason = 'New customer - no purchase history available';
+              let segmentReason = 'New customer - first-time buyer';
               
               if (totalSpent > 0) {
-                if (totalSpent > 200) {
+                if (totalSpent > 500) {
+                  segment = 'vip';
+                  segmentReason = `VIP customer with high spending of $${totalSpent}`;
+                } else if (totalSpent > 200) {
                   segment = 'high-spender';
-                  segmentReason = `High spender with $${totalSpent} total spent`;
+                  segmentReason = `High-value customer with $${totalSpent} total spent`;
                 } else if (totalSpent > 50) {
                   segment = 'returning';
-                  segmentReason = `Returning customer with $${totalSpent} spent`;
+                  segmentReason = `Returning customer with moderate spending of $${totalSpent}`;
                 } else {
                   segment = 'new';
                   segmentReason = `New customer with initial purchase of $${totalSpent}`;
                 }
               } else if (purchaseHistory && purchaseHistory.length > 0) {
-                // Analyze purchase history text for patterns
+                // Analyze purchase history text for meaningful patterns
                 const historyLower = purchaseHistory.toLowerCase();
-                if (historyLower.includes('frequent') || historyLower.includes('regular') || historyLower.includes('weekly')) {
+                const purchaseCount = (historyLower.match(/purchase|order|visit|buy/g) || []).length;
+                
+                if (historyLower.includes('frequent') || historyLower.includes('regular') || historyLower.includes('weekly') || purchaseCount > 3) {
                   segment = 'returning';
-                  segmentReason = 'Regular customer based on purchase history';
-                } else if (historyLower.includes('vip') || historyLower.includes('premium')) {
+                  segmentReason = `Regular customer with ${purchaseCount > 0 ? purchaseCount + ' recorded purchases' : 'frequent visit pattern'}`;
+                } else if (historyLower.includes('vip') || historyLower.includes('premium') || historyLower.includes('loyalty')) {
                   segment = 'vip';
-                  segmentReason = 'VIP customer based on purchase history';
-                } else if (historyLower.includes('inactive') || historyLower.includes('not visited')) {
+                  segmentReason = 'VIP customer with premium service history';
+                } else if (historyLower.includes('inactive') || historyLower.includes('not visited') || historyLower.includes('churned')) {
+                  segment = 'at-risk';
+                  segmentReason = 'At-risk customer showing signs of reduced engagement';
+                } else if (historyLower.includes('dissatisfied') || historyLower.includes('complaint') || historyLower.includes('issue')) {
                   segment = 'inactive';
-                  segmentReason = 'Inactive customer based on purchase history';
-                } else {
+                  segmentReason = 'Inactive customer with service issues noted';
+                } else if (purchaseCount === 1) {
                   segment = 'new';
-                  segmentReason = 'Customer with basic purchase history';
+                  segmentReason = 'Customer with single purchase record';
+                } else {
+                  segment = 'low-engagement';
+                  segmentReason = 'Customer with minimal recorded activity';
                 }
               }
               
@@ -288,6 +300,14 @@ const CustomerData = () => {
       segment: customer.segment
     });
     setShowAddDialog(true);
+  };
+
+  const handleDeleteCustomer = (customerId: string) => {
+    setCustomers(prevCustomers => prevCustomers.filter(customer => customer.id !== customerId));
+    toast({
+      title: "Customer deleted",
+      description: "Customer has been removed from your database."
+    });
   };
 
   // Persist customer data to localStorage whenever customers change
@@ -482,19 +502,34 @@ const CustomerData = () => {
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
-                         <div className="flex gap-2 pt-4">
-                           <Button variant="outline" onClick={() => {
-                             setShowAddDialog(false);
-                             setEditingCustomer(null);
-                             setNewCustomer({ name: "", email: "", phone: "", purchaseHistory: "", segment: "new" });
-                           }} className="flex-1">
-                             Cancel
-                           </Button>
-                           <Button onClick={handleAddCustomer} className="flex-1">
-                             {editingCustomer ? "Update" : "Add"} Customer
-                           </Button>
                          </div>
+                          <div className="flex gap-2 pt-4">
+                            {editingCustomer && (
+                              <Button 
+                                variant="destructive" 
+                                onClick={() => {
+                                  handleDeleteCustomer(editingCustomer.id);
+                                  setShowAddDialog(false);
+                                  setEditingCustomer(null);
+                                  setNewCustomer({ name: "", email: "", phone: "", purchaseHistory: "", segment: "new" });
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </Button>
+                            )}
+                            <Button variant="outline" onClick={() => {
+                              setShowAddDialog(false);
+                              setEditingCustomer(null);
+                              setNewCustomer({ name: "", email: "", phone: "", purchaseHistory: "", segment: "new" });
+                            }} className="flex-1">
+                              Cancel
+                            </Button>
+                            <Button onClick={handleAddCustomer} className="flex-1">
+                              {editingCustomer ? "Update" : "Add"} Customer
+                            </Button>
+                          </div>
                       </div>
                     </DialogContent>
                   </Dialog>

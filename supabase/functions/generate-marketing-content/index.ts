@@ -77,7 +77,7 @@ serve(async (req) => {
       - Brand Voice: ${request.businessProfile.brandVoice || 'N/A'}
       - Business Bio: ${request.businessProfile.businessBio || 'N/A'}
       - Products/Services: ${request.businessProfile.productsServices || 'N/A'}
-      - Additional Files/Resources: ${request.businessProfile.uploadedFiles ? 'Business has provided additional materials including menus, product catalogs, and brand assets for context' : 'No additional files provided'}
+      - Additional Business Materials: ${request.businessProfile.businessMaterials || 'No additional materials described'}
       
       CAMPAIGN CONFIGURATION:
       - Campaign Type: ${request.campaignType === "personalized" ? "Personalized Marketing - Targeted content for specific customers" : "General Marketing - Broad content for all audiences"}
@@ -109,10 +109,12 @@ serve(async (req) => {
       9. Create compelling, action-oriented content that drives engagement
       10. Make the content feel fresh, unique, and professionally crafted
       11. If the business profile contains URLs or links (Instagram, website, etc.), naturally incorporate them into the content when relevant
-      12. Use any additional files context (menus, catalogs, brand materials) to ensure content matches the business's actual offerings and style
+      12. Use the additional business materials description to ensure content matches the business's actual offerings and visual style
       13. For personalized campaigns, create content that can be easily customized for individual customers by referencing their specific data
       14. Do not fabricate or invent information - only use provided business and customer data
       15. If information is missing or unavailable, indicate this rather than making assumptions
+      16. For each variation, provide 3 specific image ideas that complement the content and match the business style described in the materials
+      17. Include 3 additional marketing suggestions (hashtags, promotional ideas, timing recommendations, etc.) for each variation
       
       Return ONLY a valid JSON object in this exact format:
       {
@@ -120,17 +122,23 @@ serve(async (req) => {
           {
             "title": "Subject line or headline",
             "content": "Main content body",
-            "cta": "Call to action text"
+            "cta": "Call to action text",
+            "imageIdeas": ["Image idea 1", "Image idea 2", "Image idea 3"],
+            "additionalSuggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"]
           },
           {
             "title": "Subject line or headline", 
             "content": "Main content body",
-            "cta": "Call to action text"
+            "cta": "Call to action text",
+            "imageIdeas": ["Image idea 1", "Image idea 2", "Image idea 3"],
+            "additionalSuggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"]
           },
           {
             "title": "Subject line or headline",
             "content": "Main content body", 
-            "cta": "Call to action text"
+            "cta": "Call to action text",
+            "imageIdeas": ["Image idea 1", "Image idea 2", "Image idea 3"],
+            "additionalSuggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"]
           }
         ]
       }

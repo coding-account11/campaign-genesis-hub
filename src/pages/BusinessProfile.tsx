@@ -305,9 +305,6 @@ const BusinessProfile = () => {
       <Card>
         <CardHeader>
           <CardTitle>Additional Business Materials</CardTitle>
-          <CardDescription>
-            Describe your menus, product catalogs, current Instagram page style, or other business materials so the AI can customize content to fit your brand's theme and style. Include any URLs or links in your Products/Services section above.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
