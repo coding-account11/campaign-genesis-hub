@@ -19,7 +19,8 @@ const BusinessProfile = () => {
     businessEmail: "",
     brandVoice: "friendly",
     businessBio: "",
-    productsServices: ""
+    productsServices: "",
+    businessMaterials: ""
   });
   const [loading, setLoading] = useState(true);
   
@@ -47,7 +48,8 @@ const BusinessProfile = () => {
             businessEmail: profile.email,
             brandVoice: profile.brand_voice || "friendly",
             businessBio: profile.business_bio || "",
-            productsServices: profile.products_services || ""
+            productsServices: profile.products_services || "",
+            businessMaterials: profile.business_materials || ""
           });
           setIsExistingUser(!!profile.business_name);
         } else {
@@ -301,54 +303,25 @@ const BusinessProfile = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Additional Files</CardTitle>
+          <CardTitle>Additional Business Materials</CardTitle>
           <CardDescription>
-            Upload menus, product catalogs, current Instagram page screenshots, or other business materials so the AI can customize content to fit your brand's theme and style. Include any URLs or links in your Products/Services section above.
+            Describe your menus, product catalogs, current Instagram page style, or other business materials so the AI can customize content to fit your brand's theme and style. Include any URLs or links in your Products/Services section above.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8">
-            <div className="text-center">
-              <Upload className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-              <div className="text-lg font-medium mb-2">Upload Menu/Product Files</div>
-              <p className="text-muted-foreground mb-4">PDF, Images, etc.</p>
-              <input
-                type="file"
-                multiple
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <Button variant="outline" asChild>
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  Choose Files
-                </label>
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="businessMaterials">Business Materials Description</Label>
+            <Textarea
+              id="businessMaterials"
+              value={formData.businessMaterials}
+              onChange={(e) => handleInputChange("businessMaterials", e.target.value)}
+              placeholder="Describe your current branding, Instagram aesthetic, menu layout, product presentation style, color schemes, typical promotional materials, etc. Be as detailed as possible to help our AI match your brand's look and feel."
+              rows={6}
+            />
+            <p className="text-sm text-muted-foreground">
+              Include details about your visual style, color preferences, typical layouts, social media aesthetic, and any specific branding elements you use.
+            </p>
           </div>
-
-          {uploadedFiles.length > 0 && (
-            <div className="space-y-3">
-              <Label>Uploaded Files</Label>
-              {uploadedFiles.map((fileName, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-sm">{fileName}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFile(fileName)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
