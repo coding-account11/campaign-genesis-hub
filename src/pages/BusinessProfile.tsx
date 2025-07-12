@@ -303,7 +303,7 @@ const BusinessProfile = () => {
         <CardHeader>
           <CardTitle>Additional Files</CardTitle>
           <CardDescription>
-            Upload menus, product catalogs, or other relevant files to help our AI understand your offerings.
+            Upload menus, product catalogs, current Instagram page screenshots, or other business materials so the AI can customize content to fit your brand's theme and style. Include any URLs or links in your Products/Services section above.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

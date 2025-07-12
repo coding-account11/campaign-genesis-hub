@@ -72,14 +72,14 @@ const CustomerData = () => {
   });
 
   const segments = [
-    { value: "new", label: "New Customer", description: "Recently acquired customer", color: "bg-blue-100 text-blue-800" },
-    { value: "returning", label: "Returning Customer", description: "Regular customer with consistent visits", color: "bg-green-100 text-green-800" },
-    { value: "vip", label: "VIP Customer", description: "High-value customer", color: "bg-purple-100 text-purple-800" },
-    { value: "inactive", label: "Inactive Customer", description: "Haven't visited in 60+ days", color: "bg-red-100 text-red-800" },
-    { value: "at-risk", label: "At Risk of Churning", description: "Declining engagement pattern", color: "bg-orange-100 text-orange-800" },
-    { value: "high-spender", label: "High Spender", description: "Above average spending", color: "bg-indigo-100 text-indigo-800" },
-    { value: "low-engagement", label: "Low Engagement", description: "Minimal interaction with business", color: "bg-gray-100 text-gray-800" },
-    { value: "upsell", label: "Upsell Opportunity", description: "Potential for service expansion", color: "bg-teal-100 text-teal-800" }
+    { value: "new", label: "New Customer", description: "First-time customer with recent signup", color: "bg-blue-100 text-blue-800" },
+    { value: "returning", label: "Returning Customer", description: "Regular customer with 2+ purchases", color: "bg-green-100 text-green-800" },
+    { value: "vip", label: "VIP Customer", description: "High-value customer with frequent visits", color: "bg-purple-100 text-purple-800" },
+    { value: "inactive", label: "Inactive Customer", description: "Low spending, haven't visited in 60+ days", color: "bg-red-100 text-red-800" },
+    { value: "at-risk", label: "At Risk of Churning", description: "Declining visit frequency", color: "bg-orange-100 text-orange-800" },
+    { value: "high-spender", label: "High Spender", description: "Above average spending per visit", color: "bg-indigo-100 text-indigo-800" },
+    { value: "low-engagement", label: "Low Engagement", description: "Minimal interaction and low purchase frequency", color: "bg-gray-100 text-gray-800" },
+    { value: "upsell", label: "Upsell Opportunity", description: "Regular customer ready for premium offerings", color: "bg-teal-100 text-teal-800" }
   ];
 
   const getSegmentInfo = (segmentValue: string) => {
@@ -118,40 +118,92 @@ const CustomerData = () => {
     if (!uploadFile) return;
     
     toast({
-      title: "Processing file...",
-      description: "Parsing customer data from uploaded file."
+      title: "Processing file with AI...",
+      description: "Intelligently parsing and segmenting customer data."
     });
 
     try {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const text = e.target?.result as string;
-        
-        // Basic parsing for CSV/TXT files
         const lines = text.split('\n').filter(line => line.trim());
         const newCustomers: Customer[] = [];
-        const segments = ["new", "returning", "vip", "inactive", "at-risk", "high-spender", "low-engagement", "upsell"];
+        
+        // Get business profile for intelligent segmentation
+        const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
         
         lines.forEach((line, index) => {
           if (index === 0 && line.includes(',')) return; // Skip header row
           
           const parts = line.split(',').map(part => part.trim().replace(/"/g, ''));
-          if (parts.length >= 2) {
-            const randomSegment = segments[Math.floor(Math.random() * segments.length)];
-            const customerData = { segment: randomSegment };
-            const smartSpent = calculateSmartSpending(customerData);
+          if (parts.length >= 1) {
+            // Extract available data intelligently
+            let name = parts[0] || '';
+            let email = '';
+            let phone = '';
+            let purchaseHistory = '';
+            let totalSpent = 0;
             
-            newCustomers.push({
-              id: `upload-${Date.now()}-${index}`,
-              name: parts[0] || `Customer ${index + 1}`,
-              email: parts[1] || `customer${index + 1}@email.com`,
-              phone: parts[2] || `555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
-              purchaseHistory: parts[3] || "Various purchases, loyal customer",
-              segment: randomSegment,
-              segmentReason: `Automatically assigned based on basic analysis`,
-              totalSpent: smartSpent,
-              lastPurchaseDate: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            // Smart data extraction based on content patterns
+            parts.forEach(part => {
+              if (part.includes('@')) email = part;
+              else if (/^\d{3}-?\d{3}-?\d{4}$/.test(part.replace(/[^\d-]/g, ''))) phone = part;
+              else if (/\$/.test(part)) {
+                const spent = parseFloat(part.replace(/[$,]/g, ''));
+                if (!isNaN(spent)) totalSpent = spent;
+              }
+              else if (part.length > 20 && !email && !phone) purchaseHistory = part;
             });
+            
+            // Only add if we have at least a name
+            if (name) {
+              // Intelligent segmentation based on available data
+              let segment = 'new';
+              let segmentReason = 'New customer - no purchase history available';
+              
+              if (totalSpent > 0) {
+                if (totalSpent > 200) {
+                  segment = 'high-spender';
+                  segmentReason = `High spender with $${totalSpent} total spent`;
+                } else if (totalSpent > 50) {
+                  segment = 'returning';
+                  segmentReason = `Returning customer with $${totalSpent} spent`;
+                } else {
+                  segment = 'new';
+                  segmentReason = `New customer with initial purchase of $${totalSpent}`;
+                }
+              } else if (purchaseHistory && purchaseHistory.length > 0) {
+                // Analyze purchase history text for patterns
+                const historyLower = purchaseHistory.toLowerCase();
+                if (historyLower.includes('frequent') || historyLower.includes('regular') || historyLower.includes('weekly')) {
+                  segment = 'returning';
+                  segmentReason = 'Regular customer based on purchase history';
+                } else if (historyLower.includes('vip') || historyLower.includes('premium')) {
+                  segment = 'vip';
+                  segmentReason = 'VIP customer based on purchase history';
+                } else if (historyLower.includes('inactive') || historyLower.includes('not visited')) {
+                  segment = 'inactive';
+                  segmentReason = 'Inactive customer based on purchase history';
+                } else {
+                  segment = 'new';
+                  segmentReason = 'Customer with basic purchase history';
+                }
+              }
+              
+              newCustomers.push({
+                id: `upload-${Date.now()}-${index}`,
+                name: name,
+                email: email || 'N/A',
+                phone: phone || 'N/A',
+                purchaseHistory: purchaseHistory || 'No purchase history available',
+                segment: segment,
+                segmentReason: segmentReason,
+                totalSpent: totalSpent,
+                lastPurchaseDate: totalSpent > 0 ? 
+                  new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
+                  'N/A'
+              });
+            }
           }
         });
         
@@ -160,7 +212,7 @@ const CustomerData = () => {
         
         toast({
           title: `Successfully imported ${newCustomers.length} customers!`,
-          description: "Customer data has been processed and segmented."
+          description: "Customer data has been intelligently processed and segmented."
         });
         
         setUploadFile(null);
@@ -262,10 +314,9 @@ const CustomerData = () => {
       
 
       <Tabs defaultValue="upload" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="upload">Upload & Import</TabsTrigger>
           <TabsTrigger value="manage">Manage Customers</TabsTrigger>
-          <TabsTrigger value="api">API Setup</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">

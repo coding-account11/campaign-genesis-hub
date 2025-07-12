@@ -196,7 +196,7 @@ const MarketingCalendar = () => {
           <h1 className="text-3xl font-bold">Marketing Calendar</h1>
           <p className="text-muted-foreground mt-1">Plan and schedule your marketing campaigns</p>
         </div>
-        <Button onClick={() => window.location.href = '/generate-content'}>
+        <Button onClick={() => window.location.href = '/dashboard/generate-content'}>
           Create Campaign
         </Button>
       </div>

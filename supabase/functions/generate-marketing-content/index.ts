@@ -77,6 +77,7 @@ serve(async (req) => {
       - Brand Voice: ${request.businessProfile.brandVoice || 'N/A'}
       - Business Bio: ${request.businessProfile.businessBio || 'N/A'}
       - Products/Services: ${request.businessProfile.productsServices || 'N/A'}
+      - Additional Files/Resources: ${request.businessProfile.uploadedFiles ? 'Business has provided additional materials including menus, product catalogs, and brand assets for context' : 'No additional files provided'}
       
       CAMPAIGN CONFIGURATION:
       - Campaign Type: ${request.campaignType === "personalized" ? "Personalized Marketing - Targeted content for specific customers" : "General Marketing - Broad content for all audiences"}
@@ -107,6 +108,11 @@ serve(async (req) => {
       8. Ensure each piece feels genuinely personalized based on customer data
       9. Create compelling, action-oriented content that drives engagement
       10. Make the content feel fresh, unique, and professionally crafted
+      11. If the business profile contains URLs or links (Instagram, website, etc.), naturally incorporate them into the content when relevant
+      12. Use any additional files context (menus, catalogs, brand materials) to ensure content matches the business's actual offerings and style
+      13. For personalized campaigns, create content that can be easily customized for individual customers by referencing their specific data
+      14. Do not fabricate or invent information - only use provided business and customer data
+      15. If information is missing or unavailable, indicate this rather than making assumptions
       
       Return ONLY a valid JSON object in this exact format:
       {
