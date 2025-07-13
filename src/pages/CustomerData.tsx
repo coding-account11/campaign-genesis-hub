@@ -7,15 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,16 +23,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { 
-  Upload, 
-  FileText, 
-  Users, 
-  Plus, 
-  Download, 
-  Edit, 
-  Info,
+import {
+  Upload,
+  FileText,
+  Users,
+  Plus,
+  Download,
+  Edit,
+  Info, // Make sure Info is imported
   Sparkles,
-  Trash2 
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -53,7 +53,7 @@ const CustomerData = () => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  
+
   const [newCustomer, setNewCustomer] = useState({
     name: "",
     email: "",
@@ -91,19 +91,19 @@ const CustomerData = () => {
     // Get business profile for pricing information
     const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
     const businessPrices = businessProfile.productsServices || '';
-    
+
     // Extract prices from business profile
     const priceMatches = businessPrices.match(/\$[\d,]+(\.\d{2})?/g);
     const prices = priceMatches ? priceMatches.map((p: string) => parseFloat(p.replace(/[$,]/g, ''))) : [5, 10, 15, 25];
     const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-    
+
     // Calculate spending based on segment and purchase history
     let multiplier = 1;
     if (customerData.segment === 'vip') multiplier = 3;
     else if (customerData.segment === 'returning') multiplier = 1.5;
     else if (customerData.segment === 'high-spender') multiplier = 2.5;
     else if (customerData.segment === 'inactive') multiplier = 0.3;
-    
+
     const purchaseFrequency = Math.floor(Math.random() * 10) + 1;
     return Math.round(avgPrice * purchaseFrequency * multiplier);
   };
@@ -117,7 +117,7 @@ const CustomerData = () => {
 
   const processUpload = async () => {
     if (!uploadFile) return;
-    
+
     toast({
       title: "Processing file with AI...",
       description: "Intelligently parsing and segmenting customer data."
@@ -129,13 +129,13 @@ const CustomerData = () => {
         const text = e.target?.result as string;
         const lines = text.split('\n').filter(line => line.trim());
         const newCustomers: Customer[] = [];
-        
+
         // Get business profile for intelligent segmentation
         const businessProfile = JSON.parse(localStorage.getItem('businessProfile') || '{}');
-        
+
         lines.forEach((line, index) => {
           if (index === 0 && line.includes(',')) return; // Skip header row
-          
+
           const parts = line.split(',').map(part => part.trim().replace(/"/g, ''));
           if (parts.length >= 1) {
             // Extract available data intelligently
@@ -144,7 +144,7 @@ const CustomerData = () => {
             let phone = '';
             let purchaseHistory = '';
             let totalSpent = 0;
-            
+
             // Smart data extraction based on content patterns
             parts.forEach(part => {
               if (part.includes('@')) email = part;
@@ -155,13 +155,13 @@ const CustomerData = () => {
               }
               else if (part.length > 20 && !email && !phone) purchaseHistory = part;
             });
-            
+
             // Only add if we have at least a name
             if (name) {
             // Intelligent segmentation based on available data
               let segment = 'new';
               let segmentReason = 'New customer - first-time buyer';
-              
+
               if (totalSpent > 0) {
                 if (totalSpent > 500) {
                   segment = 'vip';
@@ -180,7 +180,7 @@ const CustomerData = () => {
                 // Analyze purchase history text for meaningful patterns
                 const historyLower = purchaseHistory.toLowerCase();
                 const purchaseCount = (historyLower.match(/purchase|order|visit|buy/g) || []).length;
-                
+
                 if (historyLower.includes('frequent') || historyLower.includes('regular') || historyLower.includes('weekly') || purchaseCount > 3) {
                   segment = 'returning';
                   segmentReason = `Regular customer with ${purchaseCount > 0 ? purchaseCount + ' recorded purchases' : 'frequent visit pattern'}`;
@@ -201,7 +201,7 @@ const CustomerData = () => {
                   segmentReason = 'Customer with minimal recorded activity';
                 }
               }
-              
+
               newCustomers.push({
                 id: `upload-${Date.now()}-${index}`,
                 name: name,
@@ -211,27 +211,27 @@ const CustomerData = () => {
                 segment: segment,
                 segmentReason: segmentReason,
                 totalSpent: totalSpent,
-                lastPurchaseDate: totalSpent > 0 ? 
-                  new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
+                lastPurchaseDate: totalSpent > 0 ?
+                  new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] :
                   'N/A'
               });
             }
           }
         });
-        
+
         setCustomers(newCustomers);
         localStorage.setItem('customerData', JSON.stringify(newCustomers));
-        
+
         toast({
           title: `Successfully imported ${newCustomers.length} customers!`,
           description: "Customer data has been intelligently processed and segmented."
         });
-        
+
         setUploadFile(null);
       };
-      
+
       reader.readAsText(uploadFile);
-      
+
     } catch (error) {
       console.error('Error processing upload:', error);
       toast({
@@ -246,9 +246,9 @@ const CustomerData = () => {
   const handleAddCustomer = () => {
     if (editingCustomer) {
       // Update existing customer
-      setCustomers(prevCustomers => 
-        prevCustomers.map(customer => 
-          customer.id === editingCustomer.id 
+      setCustomers(prevCustomers =>
+        prevCustomers.map(customer =>
+          customer.id === editingCustomer.id
             ? {
                 ...customer,
                 name: newCustomer.name,
@@ -277,14 +277,14 @@ const CustomerData = () => {
         totalSpent: 0,
         lastPurchaseDate: new Date().toISOString().split('T')[0]
       };
-      
+
       setCustomers(prevCustomers => [...prevCustomers, newCustomerData]);
       toast({
         title: "Customer added",
         description: `${newCustomer.name} has been added to your customer database.`
       });
     }
-    
+
     setNewCustomer({ name: "", email: "", phone: "", purchaseHistory: "", segment: "new" });
     setEditingCustomer(null);
     setShowAddDialog(false);
@@ -331,7 +331,7 @@ const CustomerData = () => {
         </div>
       </div>
 
-      
+
 
       <Tabs defaultValue="upload" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -397,18 +397,20 @@ const CustomerData = () => {
                   AI Customer Segmentation
                 </CardTitle>
                 <CardDescription>
-                  The AI will automatically assign customers to segments based on spending patterns, frequency, and behavior. Hover to see definitions.
+                  The AI will automatically assign customers to segments based on spending patterns, frequency, and behavior. Hover over a segment badge to see its definition.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-3">
                   {segments.map((segment) => (
-                    <div key={segment.value} className="relative group">
-                      <Badge className={`${segment.color} w-full justify-center cursor-help`}>
+                    // FIX: Wrapped Badge and Info icon in a single div for consistent hover target
+                    <div key={segment.value} className="relative group flex items-center justify-center">
+                      <Badge className={`${segment.color} w-full justify-center cursor-help py-2`}>
                         {segment.label}
-                        <Info className="w-3 h-3 ml-1" />
+                        {/* Removed Info icon here as it's part of the main hover target now */}
                       </Badge>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                      {/* Tooltip for segment description, positioned relative to the group parent */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 whitespace-nowrap pointer-events-none">
                         {segment.description}
                       </div>
                     </div>
@@ -505,8 +507,8 @@ const CustomerData = () => {
                          </div>
                           <div className="flex gap-2 pt-4">
                             {editingCustomer && (
-                              <Button 
-                                variant="destructive" 
+                              <Button
+                                variant="destructive"
                                 onClick={() => {
                                   handleDeleteCustomer(editingCustomer.id);
                                   setShowAddDialog(false);
@@ -566,15 +568,15 @@ const CustomerData = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          {/* FIX: Wrapped Badge and Info icon in a single relative div for consistent hover target */}
+                          <div className="relative group flex items-center gap-2">
                             <Badge className={segmentInfo.color}>
                               {segmentInfo.label}
                             </Badge>
-                            <div className="relative group">
-                              <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-                                {customer.segmentReason}
-                              </div>
+                            <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                            {/* Tooltip for segment reason, positioned relative to the group parent */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 whitespace-nowrap pointer-events-none">
+                              {customer.segmentReason}
                             </div>
                           </div>
                         </TableCell>
@@ -587,8 +589,8 @@ const CustomerData = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleEditCustomer(customer)}
                           >
